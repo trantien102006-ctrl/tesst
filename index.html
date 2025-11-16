@@ -1,33 +1,45 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Turn-based Battle Web</title>
-  <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Turn-based Battle Game</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div id="game-container">
-    <!-- Cột trái: Giao diện chính -->
-    <div id="left-panel">
-      <h1>🌟 Turn-based Battle Web 🌟</h1>
-      <div id="status"></div>
-      <div class="stat-row">
-        <div id="player-stats" class="character-block"></div>
-        <div id="enemy-stats" class="character-block"></div>
-      </div>
-      <div id="menu"></div>
-      <button id="restart-btn" style="display: none;">Chơi lại</button>
+    <div id="game-container">
+        <!-- Cột trái: Thông tin nhân vật và menu -->
+        <div id="left-panel">
+            <h1>⚔️ Turn-based Battle Game ⚔️</h1>
+            <div id="status">🌀 Trận chiến bắt đầu!</div>
+            
+            <div class="stat-row">
+                <div id="player-stats" class="character-block">
+                    <!-- Player stats will be loaded here -->
+                </div>
+                <div id="enemy-stats" class="character-block">
+                    <!-- Enemy stats will be loaded here -->
+                </div>
+            </div>
+            
+            <div id="menu">
+                <!-- Menu buttons will be loaded here -->
+            </div>
+            
+            <button id="restart-btn" style="display: none;">🔄 Chơi lại</button>
+        </div>
+        
+        <!-- Cột phải: Thông tin chiến đấu -->
+        <div id="right-panel">
+            <h2>📊 Nhật ký chiến đấu</h2>
+            <div id="damage-log">
+                <!-- Battle log will be displayed here -->
+            </div>
+        </div>
     </div>
 
-    <!-- Cột phải: Thông tin chiến đấu -->
-    <div id="right-panel">
-      <h2>📊 Thông Tin Chiến Đấu</h2>
-      <div id="damage-log"></div>
-    </div>
-  </div>
-
-  <script src="main.js"></script>
+    <script src="main.js"></script>
 </body>
 </html>
+
 
