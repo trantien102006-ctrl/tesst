@@ -16,37 +16,174 @@ class NhanVat {
     this.giap_co_ban = giap_co_ban;
     this.trang_bi = null;
     this.cap_do = 1;
+    
+    // Hệ thống mới
+    this.no = 0; // Nộ - năng lượng cho skill
+    this.max_no = 100;
+    this.buff_sat_thuong_thuong = 0; // % tăng sát thương thường
+    this.buff_sat_thuong_phan_cong = 0; // % tăng sát thương phản công
+    this.buff_sat_thuong_trung_phat = 0; // % tăng sát thương trừng phạt
+    this.buff_sat_thuong_combo = 0; // % tăng sát thương combo
+    this.buff_sat_thuong_ky_nang = 0; // % tăng sát thương kỹ năng
+    
+    // Trạng thái khống chế
+    this.trang_thai_khong_che = null;
+    this.thoi_gian_khong_che = 0;
   }
   
   get tong_sat_thuong() {
-    return this.sat_thuong_co_ban + (this.trang_bi ? this.trang_bi.sat_thuong : 0);
+    let sat_thuong_co_so = this.sat_thuong_co_ban + (this.trang_bi ? this.trang_bi.sat_thuong : 0);
+    return Math.floor(sat_thuong_co_so * (1 + this.buff_sat_thuong_thuong / 100));
+  }
+  
+  get tong_sat_thuong_phan_cong() {
+    let sat_thuong_co_so = this.sat_thuong_co_ban + (this.trang_bi ? this.trang_bi.sat_thuong : 0);
+    let bonus_from_normal = this.buff_sat_thuong_thuong * 0.5; // Chỉ 50% từ buff thường
+    let total_bonus = bonus_from_normal + this.buff_sat_thuong_phan_cong;
+    return Math.floor(sat_thuong_co_so * (1 + total_bonus / 100));
+  }
+  
+  get tong_sat_thuong_trung_phat() {
+    let sat_thuong_co_so = this.sat_thuong_co_ban + (this.trang_bi ? this.trang_bi.sat_thuong : 0);
+    let total_bonus = this.buff_sat_thuong_thuong + this.buff_sat_thuong_trung_phat;
+    return Math.floor(sat_thuong_co_so * (1 + total_bonus / 100));
+  }
+  
+  get tong_sat_thuong_combo() {
+    let sat_thuong_co_so = this.sat_thuong_co_ban + (this.trang_bi ? this.trang_bi.sat_thuong : 0);
+    let total_bonus = this.buff_sat_thuong_thuong + this.buff_sat_thuong_combo;
+    return Math.floor(sat_thuong_co_so * (1 + total_bonus / 100));
+  }
+  
+  get tong_sat_thuong_ky_nang() {
+    let sat_thuong_co_so = this.sat_thuong_co_ban + (this.trang_bi ? this.trang_bi.sat_thuong : 0);
+    return Math.floor(sat_thuong_co_so * (1 + this.buff_sat_thuong_ky_nang / 100));
   }
   
   get tong_giap() {
     return this.giap_co_ban + (this.trang_bi ? this.trang_bi.giap : 0);
   }
   
-  tan_cong(muc_tieu) {
+  // Công thức giảm sát thương mới
+  tinh_sat_thuong_thuc(atk) {
+    let arm = this.tong_giap;
+    let damage_taken = atk * (1 - (arm / (500 + arm)));
+    return Math.max(1, Math.floor(damage_taken));
+  }
+  
+  // Tấn công thường - Sát thương trắng
+  tan_cong_thuong(muc_tieu) {
+    if (this.trang_thai_khong_che && this.trang_thai_khong_che >= 2) {
+      addLog(`🔒 <b>${this.ten}</b> bị khống chế cấp ${this.trang_thai_khong_che}, không thể tấn công!`);
+      return 0;
+    }
+    
     let sat_thuong_goc = this.tong_sat_thuong;
     let sat_thuong = Math.floor(sat_thuong_goc * (0.8 + Math.random() * 0.4));
-    let giap_muc_tieu = muc_tieu.tong_giap;
-    let sat_thuong_thuc = Math.max(1, sat_thuong - giap_muc_tieu);
+    let sat_thuong_thuc = muc_tieu.tinh_sat_thuong_thuc(sat_thuong);
+    
     muc_tieu.mau -= sat_thuong_thuc;
     if (muc_tieu.mau < 0) muc_tieu.mau = 0;
     
-    addLog(`🎯 <b>${this.ten}</b> tấn công <b>${muc_tieu.ten}</b>!<br>
-    ⚔️ Sát thương: <b>${sat_thuong_goc}</b> - 🛡️ Giáp <b>${giap_muc_tieu}</b> = <b style="color:#ff6b6b">${sat_thuong_thuc}</b> sát thương thực!`);
+    // Tích nộ từ tấn công thường
+    let no_tich_duoc = Math.random() < 0.5 ? 10 : 20;
+    this.no = Math.min(this.max_no, this.no + no_tich_duoc);
+    
+    addLog(`⚪ <b>${this.ten}</b> tấn công thường <b>${muc_tieu.ten}</b>!<br>
+    ⚔️ Sát thương trắng: <b>${sat_thuong_goc}</b> → <b>${sat_thuong}</b><br>
+    🛡️ Giảm sát thương: <b>${sat_thuong_thuc}</b> sát thương thực!<br>
+    🔥 +<b>${no_tich_duoc}</b> Nộ (${this.no}/${this.max_no})`);
+    
     updateDisplay();
     return sat_thuong_thuc;
   }
   
-  hoi_mau() {
-    let hoi_mau = randInt(10, 20);
-    this.mau += hoi_mau;
-    if (this.mau > this.mau_toi_da) this.mau = this.mau_toi_da;
-    addLog(`💚 <b>${this.ten}</b> hồi <b style="color:#51cf66">+${hoi_mau}</b> máu!`);
+  // Kỹ năng Trừng Phạt - tốn 100 nộ
+  ky_nang_trung_phat(muc_tieu) {
+    if (this.no < 100) {
+      addLog(`❌ <b>${this.ten}</b> không đủ 100 Nộ để sử dụng Trừng Phạt!`);
+      return 0;
+    }
+    
+    this.no -= 100;
+    let sat_thuong_goc = this.tong_sat_thuong_trung_phat;
+    let sat_thuong = Math.floor(sat_thuong_goc * (1.5 + Math.random() * 0.5)); // 150-200% sát thương
+    let sat_thuong_thuc = muc_tieu.tinh_sat_thuong_thuc(sat_thuong);
+    
+    muc_tieu.mau -= sat_thuong_thuc;
+    if (muc_tieu.mau < 0) muc_tieu.mau = 0;
+    
+    addLog(`💢 <b>${this.ten}</b> sử dụng <b>TRỪNG PHẠT</b>!<br>
+    ⚡ Sát thương trừng phạt: <b>${sat_thuong_goc}</b> → <b>${sat_thuong}</b><br>
+    💥 Sát thương thực: <b style="color:#ff6b6b">${sat_thuong_thuc}</b><br>
+    🔥 -<b>100</b> Nộ (${this.no}/${this.max_no})`);
+    
     updateDisplay();
-    return hoi_mau;
+    return sat_thuong_thuc;
+  }
+  
+  // Kỹ năng Combo - tốn 100 nộ
+  ky_nang_combo(muc_tieu) {
+    if (this.no < 100) {
+      addLog(`❌ <b>${this.ten}</b> không đủ 100 Nộ để sử dụng Combo!`);
+      return 0;
+    }
+    
+    this.no -= 100;
+    let sat_thuong_goc = this.tong_sat_thuong_combo;
+    
+    // Combo: 3 đòn tấn công
+    let total_damage = 0;
+    let combo_log = "";
+    
+    for (let i = 1; i <= 3; i++) {
+      let sat_thuong = Math.floor(sat_thuong_goc * (0.4 + Math.random() * 0.3)); // Mỗi đòn 40-70%
+      let sat_thuong_thuc = muc_tieu.tinh_sat_thuong_thuc(sat_thuong);
+      muc_tieu.mau -= sat_thuong_thuc;
+      total_damage += sat_thuong_thuc;
+      combo_log += `Đòn ${i}: ${sat_thuong_thuc} | `;
+    }
+    
+    if (muc_tieu.mau < 0) muc_tieu.mau = 0;
+    
+    addLog(`🔄 <b>${this.ten}</b> sử dụng <b>COMBO</b>!<br>
+    ⚡ Sát thương combo: <b>${sat_thuong_goc}</b> mỗi đòn<br>
+    💥 ${combo_log}<br>
+    💀 Tổng sát thương: <b style="color:#ff6b6b">${total_damage}</b><br>
+    🔥 -<b>100</b> Nộ (${this.no}/${this.max_no})`);
+    
+    updateDisplay();
+    return total_damage;
+  }
+  
+  // Kỹ năng Đặc Biệt - tốn 100 nộ
+  ky_nang_dac_biet(muc_tieu) {
+    if (this.no < 100) {
+      addLog(`❌ <b>${this.ten}</b> không đủ 100 Nộ để sử dụng Kỹ Năng!`);
+      return 0;
+    }
+    
+    this.no -= 100;
+    let sat_thuong_goc = this.tong_sat_thuong_ky_nang;
+    let sat_thuong = Math.floor(sat_thuong_goc * (2.0 + Math.random() * 0.5)); // 200-250% sát thương
+    
+    // Kỹ năng bỏ qua 50% giáp
+    let arm = muc_tieu.tong_giap;
+    let effective_arm = Math.floor(arm * 0.5);
+    let damage_taken = sat_thuong * (1 - (effective_arm / (500 + effective_arm)));
+    let sat_thuong_thuc = Math.max(1, Math.floor(damage_taken));
+    
+    muc_tieu.mau -= sat_thuong_thuc;
+    if (muc_tieu.mau < 0) muc_tieu.mau = 0;
+    
+    addLog(`✨ <b>${this.ten}</b> sử dụng <b>KỸ NĂNG ĐẶC BIỆT</b>!<br>
+    ⚡ Sát thương kỹ năng: <b>${sat_thuong_goc}</b> → <b>${sat_thuong}</b><br>
+    🛡️ Bỏ qua 50% giáp!<br>
+    💥 Sát thương thực: <b style="color:#ff6b6b">${sat_thuong_thuc}</b><br>
+    🔥 -<b>100</b> Nộ (${this.no}/${this.max_no})`);
+    
+    updateDisplay();
+    return sat_thuong_thuc;
   }
   
   con_song() {
@@ -56,32 +193,21 @@ class NhanVat {
   trang_thai() {
     let phan_tram_mau = (this.mau / this.mau_toi_da) * 100;
     let mau_color = phan_tram_mau > 70 ? "#51cf66" : phan_tram_mau > 30 ? "#fcc419" : "#ff6b6b";
+    let no_color = this.no >= 100 ? "#ffd43b" : "#74c0fc";
+    
     let trang_bi_info = this.trang_bi ? 
       `<br>🎒 <b>Trang bị:</b> ${this.trang_bi.ten}<br>⚔️ +${this.trang_bi.sat_thuong} sát thương, 🛡️ +${this.trang_bi.giap} giáp` : 
       "<br>🎒 <b>Trang bị:</b> Không có";
     
+    let buff_info = "";
+    if (this.buff_sat_thuong_thuong > 0) buff_info += `<br>📈 <b>Buff ST thường:</b> +${this.buff_sat_thuong_thuong}%`;
+    if (this.buff_sat_thuong_phan_cong > 0) buff_info += `<br>📈 <b>Buff ST phản công:</b> +${this.buff_sat_thuong_phan_cong}%`;
+    
     return `<b>${this.ten}</b> - Cấp ${this.cap_do}<br>
     ❤️ <b>Máu:</b> <span style="color:${mau_color}">${this.mau}/${this.mau_toi_da}</span> (${phan_tram_mau.toFixed(1)}%)<br>
+    🔥 <b>Nộ:</b> <span style="color:${no_color}">${this.no}/${this.max_no}</span><br>
     ⚔️ <b>Sát thương:</b> ${this.tong_sat_thuong} (Cơ bản: ${this.sat_thuong_co_ban})<br>
-    🛡️ <b>Giáp:</b> ${this.tong_giap} (Cơ bản: ${this.giap_co_ban})${trang_bi_info}`;
-  }
-  
-  chi_so_co_ban() {
-    return `<b>${this.ten} - Chỉ số cơ bản</b><br><br>
-    🎯 <b>Cấp độ:</b> ${this.cap_do}<br>
-    ❤️ <b>Máu cơ bản:</b> ${this.mau_toi_da}<br>
-    ⚔️ <b>Sát thương cơ bản:</b> ${this.sat_thuong_co_ban}<br>
-    🛡️ <b>Giáp cơ bản:</b> ${this.giap_co_ban}${
-      this.trang_bi ? 
-        `<br><br>🎒 <b>Trang bị:</b><br>
-        🗡️ <b>Tên:</b> ${this.trang_bi.ten}<br>
-        ⚔️ <b>Sát thương:</b> +${this.trang_bi.sat_thuong}<br>
-        🛡️ <b>Giáp:</b> +${this.trang_bi.giap}`
-      : '<br><br>🎒 <b>Trang bị:</b> Không có'
-    }
-    <br><br><b>📊 Tổng chỉ số:</b><br>
-    ⚔️ <b>Tổng sát thương:</b> ${this.tong_sat_thuong}<br>
-    🛡️ <b>Tổng giáp:</b> ${this.tong_giap}`;
+    🛡️ <b>Giáp:</b> ${this.tong_giap} (Cơ bản: ${this.giap_co_ban})${trang_bi_info}${buff_info}`;
   }
 }
 
@@ -107,7 +233,10 @@ function sleep(ms) {
 let nguoi_choi, enemy, cap_do_hien_tai, so_quai_vat_da_tieu_diet, inBattle = true;
 
 let mainMenuHtml = `
-  <button onclick="chonHanhDong(1)">⚔️ Tấn công</button>
+  <button onclick="chonHanhDong(1)">⚪ Tấn công thường</button>
+  <button onclick="chonHanhDong(7)" id="trung-phat-btn">💢 Trừng phạt (100 nộ)</button>
+  <button onclick="chonHanhDong(8)" id="combo-btn">🔄 Combo (100 nộ)</button>
+  <button onclick="chonHanhDong(9)" id="ky-nang-btn">✨ Kỹ năng (100 nộ)</button>
   <button onclick="chonHanhDong(2)">💚 Hồi máu</button>
   <button onclick="chonHanhDong(3)">🛡️ Xem trạng thái</button>
   <button onclick="chonHanhDong(4)">📊 Xem chỉ số bản thân</button>
@@ -116,17 +245,18 @@ let mainMenuHtml = `
 `;
 
 function tao_quai_vat(cap_do) {
-  let mau_co_ban = 60 + (cap_do * 10);
-  let sat_thuong_co_ban = 8 + (cap_do * 2);
-  let giap_co_ban = 2 + cap_do;
+  let mau_co_ban = 1000 + (cap_do * 200); // Máu ~1000+
+  let sat_thuong_co_ban = 100 + (cap_do * 20); // ST ~100+
+  let giap_co_ban = 200 + (cap_do * 30); // Giáp ~200+
+  
   let ten_quai = arrRand(["Goblin", "Orc", "Skeleton", "Zombie", "Wolf"]);
   let quai_vat = new NhanVat(`${ten_quai} (Cấp ${cap_do})`, mau_co_ban, sat_thuong_co_ban, giap_co_ban);
   
   if (Math.random() < 0.5) {
     let trang_bi_quai = arrRand([
-      new TrangBi("Răng nanh", 2, 0),
-      new TrangBi("Da thú", 0, 2),
-      new TrangBi("Móng vuốt", 3, 1)
+      new TrangBi("Răng nanh", 20, 0),
+      new TrangBi("Da thú", 0, 30),
+      new TrangBi("Móng vuốt", 30, 15)
     ]);
     quai_vat.trang_bi = trang_bi_quai;
   }
@@ -142,13 +272,17 @@ function khoi_tao_game() {
   so_quai_vat_da_tieu_diet = 0;
   cap_do_hien_tai = 1;
   inBattle = true;
-  nguoi_choi = new NhanVat("Anh hùng", 100, 12, 3);
-  nguoi_choi.trang_bi = new TrangBi("Kiếm gỗ", 3, 0);
+  
+  // Chỉ số mới: Máu 1000, ST 100, Giáp 200
+  nguoi_choi = new NhanVat("Anh hùng", 1000, 100, 200);
+  nguoi_choi.trang_bi = new TrangBi("Kiếm gỗ", 30, 0);
   nguoi_choi.cap_do = 1;
+  
   enemy = null;
   clearLog();
   document.getElementById('restart-btn').style.display = "none";
-  addLog(`🎮 <b>BẮT ĐẦU CUỘC PHIÊU LƯU!</b><br>⚔️ <b>Trang bị ban đầu:</b><br>🗡️ Vũ khí: Kiếm gỗ (+3 sát thương)`);
+  
+  addLog(`🎮 <b>BẮT ĐẦU CUỘC PHIÊU LƯU MỚI!</b><br>⚔️ <b>Trang bị ban đầu:</b><br>🗡️ Vũ khí: Kiếm gỗ (+30 sát thương)<br>🔥 <b>Hệ thống Nộ:</b> Tích nộ để sử dụng kỹ năng!`);
   tao_quai_va_chien();
 }
 
@@ -164,6 +298,7 @@ async function startBattle() {
   updateDisplay();
   inBattle = true;
   document.getElementById('menu').innerHTML = mainMenuHtml;
+  updateSkillButtons();
   
   while (nguoi_choi.con_song() && enemy.con_song() && inBattle) {
     luot_choi++;
@@ -173,21 +308,32 @@ async function startBattle() {
     await waitForHanhDong();
     if (!nguoi_choi.con_song() || !enemy.con_song() || !inBattle) break;
     
-    // Enemy turn
+    // Enemy turn - chỉ tấn công thường
     document.getElementById("status").innerHTML = `👹 <b>Lượt của ${enemy.ten}</b>`;
     await sleep(1000);
     
-    if (Math.random() < 0.7 || enemy.mau > enemy.mau_toi_da * 0.5) {
-      enemy.tan_cong(nguoi_choi);
-    } else {
-      enemy.hoi_mau();
-    }
+    enemy.tan_cong_thuong(nguoi_choi);
     
     updateDisplay();
+    updateSkillButtons();
     await sleep(1000);
   }
   
   setTimeout(checkEndBattle, 500);
+}
+
+// Cập nhật trạng thái nút kỹ năng
+function updateSkillButtons() {
+  const canUseSkill = nguoi_choi.no >= 100;
+  document.getElementById('trung-phat-btn').disabled = !canUseSkill;
+  document.getElementById('combo-btn').disabled = !canUseSkill;
+  document.getElementById('ky-nang-btn').disabled = !canUseSkill;
+  
+  if (!canUseSkill) {
+    document.getElementById('trung-phat-btn').title = "Cần 100 nộ";
+    document.getElementById('combo-btn').title = "Cần 100 nộ";
+    document.getElementById('ky-nang-btn').title = "Cần 100 nộ";
+  }
 }
 
 window.chonHanhDong = chonHanhDong;
@@ -197,7 +343,19 @@ function chonHanhDong(i) {
   
   switch (i) {
     case 1:
-      nguoi_choi.tan_cong(enemy);
+      nguoi_choi.tan_cong_thuong(enemy);
+      checkEnemyDead();
+      break;
+    case 7:
+      nguoi_choi.ky_nang_trung_phat(enemy);
+      checkEnemyDead();
+      break;
+    case 8:
+      nguoi_choi.ky_nang_combo(enemy);
+      checkEnemyDead();
+      break;
+    case 9:
+      nguoi_choi.ky_nang_dac_biet(enemy);
       checkEnemyDead();
       break;
     case 2:
@@ -218,10 +376,10 @@ function chonHanhDong(i) {
       break;
   }
   window.choHanhDong = true;
+  updateSkillButtons();
 }
 
 function showAlert(content) {
-  // Tạo modal đơn giản thay vì alert
   const modal = document.createElement('div');
   modal.style.cssText = `
     position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
@@ -254,10 +412,10 @@ function checkEnemyDead() {
     // Trang bị mới 
     if (Math.random() < 0.3) {
       let trang_bi_moi = arrRand([
-        new TrangBi("Kiếm sắt", 5, 0),
-        new TrangBi("Áo giáp sắt", 0, 4),
-        new TrangBi("Khiên gỗ", 1, 3),
-        new TrangBi("Rìu chiến", 6, 1)
+        new TrangBi("Kiếm sắt", 50, 0),
+        new TrangBi("Áo giáp sắt", 0, 40),
+        new TrangBi("Khiên gỗ", 10, 30),
+        new TrangBi("Rìu chiến", 60, 10)
       ]);
       nguoi_choi.trang_bi = trang_bi_moi;
       addLog(`💎 <b>Bạn nhận được trang bị mới!</b><br>🎒 ${trang_bi_moi.ten}<br>⚔️ +${trang_bi_moi.sat_thuong} sát thương<br>🛡️ +${trang_bi_moi.giap} giáp`);
@@ -267,11 +425,11 @@ function checkEnemyDead() {
     if (so_quai_vat_da_tieu_diet % 3 === 0) {
       cap_do_hien_tai++;
       nguoi_choi.cap_do++;
-      nguoi_choi.mau_toi_da += 10;
+      nguoi_choi.mau_toi_da += 100;
       nguoi_choi.mau = nguoi_choi.mau_toi_da;
-      nguoi_choi.sat_thuong_co_ban += 2;
-      nguoi_choi.giap_co_ban += 1;
-      addLog(`🎊 <b>Bạn đã lên cấp ${nguoi_choi.cap_do}!</b><br>❤️ +10 máu tối đa<br>⚔️ +2 sát thương cơ bản<br>🛡️ +1 giáp cơ bản`);
+      nguoi_choi.sat_thuong_co_ban += 20;
+      nguoi_choi.giap_co_ban += 15;
+      addLog(`🎊 <b>Bạn đã lên cấp ${nguoi_choi.cap_do}!</b><br>❤️ +100 máu tối đa<br>⚔️ +20 sát thương cơ bản<br>🛡️ +15 giáp cơ bản`);
     }
   }
 }
@@ -316,3 +474,4 @@ document.addEventListener('DOMContentLoaded', function() {
   document.getElementById('restart-btn').onclick = khoi_tao_game;
   khoi_tao_game();
 });
+
