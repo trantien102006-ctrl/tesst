@@ -8,16 +8,26 @@
 </head>
 <body>
   <div id="game-container">
-    <h1>🌟 Turn-based Battle Web 🌟</h1>
-    <div id="status"></div>
-    <div class="stat-row">
-      <div id="player-stats" class="character-block"></div>
-      <div id="enemy-stats" class="character-block"></div>
+    <!-- Cột trái: Giao diện chính -->
+    <div id="left-panel">
+      <h1>🌟 Turn-based Battle Web 🌟</h1>
+      <div id="status"></div>
+      <div class="stat-row">
+        <div id="player-stats" class="character-block"></div>
+        <div id="enemy-stats" class="character-block"></div>
+      </div>
+      <div id="menu"></div>
+      <button id="restart-btn" style="display: none;">Chơi lại</button>
     </div>
-    <div id="menu"></div>
-    <div id="log"></div>
-    <button id="restart-btn" style="display: none;">Chơi lại</button>
+
+    <!-- Cột phải: Thông tin chiến đấu -->
+    <div id="right-panel">
+      <h2>📊 Thông Tin Chiến Đấu</h2>
+      <div id="damage-log"></div>
+    </div>
   </div>
+
   <script src="main.js"></script>
 </body>
 </html>
+
