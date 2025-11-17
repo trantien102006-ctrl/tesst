@@ -22,6 +22,10 @@ class NhanVat {
         this.max_no = 100;
         this.buff_sat_thuong_thuong = 0;
         this.buff_sat_thuong_phan_cong = 0;
+        
+        // Bộ đếm lượt cho kỹ năng hồi máu
+        this.hoi_mau_cooldown = 0;
+        this.hoi_mau_cooldown_max = 3; // 3 lượt mới được dùng lại
     }
     
     get tong_sat_thuong() {
@@ -163,19 +167,39 @@ class NhanVat {
         return this.mau > 0;
     }
     
+    // Hồi máu với cooldown
     hoi_mau() {
+        // Kiểm tra cooldown
+        if (this.hoi_mau_cooldown > 0) {
+            addDamageLog(`⏳ <b>${this.ten}</b> chưa thể hồi máu! Còn <b>${this.hoi_mau_cooldown}</b> lượt nữa.`);
+            return 0;
+        }
+        
         let hoi_mau = randInt(50, 100);
         this.mau += hoi_mau;
         if (this.mau > this.mau_toi_da) this.mau = this.mau_toi_da;
-        addDamageLog(`💚 <b>${this.ten}</b> hồi máu<br>Hồi +<b>${hoi_mau}</b> máu`);
+        
+        // Đặt cooldown
+        this.hoi_mau_cooldown = this.hoi_mau_cooldown_max;
+        
+        addDamageLog(`💚 <b>${this.ten}</b> hồi máu<br>Hồi +<b>${hoi_mau}</b> máu<br>⏳ Cooldown: ${this.hoi_mau_cooldown} lượt`);
         updateDisplay();
+        updateSkillButtons();
         return hoi_mau;
+    }
+    
+    // Giảm cooldown mỗi lượt
+    giam_cooldown() {
+        if (this.hoi_mau_cooldown > 0) {
+            this.hoi_mau_cooldown--;
+        }
     }
     
     trang_thai() {
         let phan_tram_mau = (this.mau / this.mau_toi_da) * 100;
         let mau_color = phan_tram_mau > 70 ? "#51cf66" : phan_tram_mau > 30 ? "#fcc419" : "#ff6b6b";
         let no_color = this.no >= 100 ? "#ffd43b" : "#74c0fc";
+        let cooldown_color = this.hoi_mau_cooldown > 0 ? "#ff6b6b" : "#51cf66";
         
         let trang_bi_info = this.trang_bi ? 
             `<div class="stat-item">🎒 <b>Trang bị:</b> ${this.trang_bi.ten}</div>
@@ -183,12 +207,17 @@ class NhanVat {
              <div class="stat-item">🛡️ +${this.trang_bi.giap} giáp</div>` : 
             "<div class='stat-item'>🎒 <b>Trang bị:</b> Không có</div>";
         
+        let cooldown_info = this.hoi_mau_cooldown > 0 ?
+            `<div class="stat-item">⏳ <b>Hồi máu cooldown:</b> <span style="color:${cooldown_color}">${this.hoi_mau_cooldown} lượt</span></div>` :
+            `<div class="stat-item">⏳ <b>Hồi máu:</b> <span style="color:${cooldown_color}">Sẵn sàng</span></div>`;
+        
         return `
             <div class="stat-item"><b>${this.ten}</b> - Cấp ${this.cap_do}</div>
             <div class="stat-item">❤️ <b>Máu:</b> <span style="color:${mau_color}">${this.mau}/${this.mau_toi_da}</span> (${phan_tram_mau.toFixed(1)}%)</div>
             <div class="stat-item">🔥 <b>Nộ:</b> <span style="color:${no_color}">${this.no}/${this.max_no}</span></div>
             <div class="stat-item">⚔️ <b>Sát thương:</b> ${this.tong_sat_thuong}</div>
             <div class="stat-item">🛡️ <b>Giáp:</b> ${this.tong_giap}</div>
+            ${cooldown_info}
             ${trang_bi_info}
         `;
     }
@@ -224,7 +253,7 @@ let mainMenuHtml = `
     <button onclick="chonHanhDong(7)" id="trung-phat-btn">💢 Trừng phạt (100 nộ)</button>
     <button onclick="chonHanhDong(8)" id="combo-btn">🔄 Combo (100 nộ)</button>
     <button onclick="chonHanhDong(9)" id="ky-nang-btn">✨ Kỹ năng (100 nộ)</button>
-    <button onclick="chonHanhDong(2)">💚 Hồi máu</button>
+    <button onclick="chonHanhDong(2)" id="hoi-mau-btn">💚 Hồi máu</button>
     <button onclick="chonHanhDong(6)">❌ Thoát game</button>
 `;
 
@@ -266,7 +295,7 @@ function khoi_tao_game() {
     clearLog();
     document.getElementById('restart-btn').style.display = "none";
     
-    addDamageLog(`🎮 <b>BẮT ĐẦU CUỘC PHIÊU LƯU MỚI!</b><br>🔥 <b>Hệ thống Nộ:</b> Tích nộ để sử dụng kỹ năng!`);
+    addDamageLog(`🎮 <b>BẮT ĐẦU CUỘC PHIÊU LƯU MỚI!</b><br>🔥 <b>Hệ thống Nộ:</b> Tích nộ để sử dụng kỹ năng!<br>💚 <b>Hồi máu:</b> Cooldown 3 lượt`);
     tao_quai_va_chien();
 }
 
@@ -298,6 +327,9 @@ async function startBattle() {
         
         enemy.tan_cong_thuong(nguoi_choi);
         
+        // Giảm cooldown sau mỗi lượt
+        nguoi_choi.giam_cooldown();
+        
         updateDisplay();
         updateSkillButtons();
         await sleep(1000);
@@ -309,9 +341,12 @@ async function startBattle() {
 // Cập nhật trạng thái nút kỹ năng
 function updateSkillButtons() {
     const canUseSkill = nguoi_choi.no >= 100;
+    const canHeal = nguoi_choi.hoi_mau_cooldown === 0;
+    
     document.getElementById('trung-phat-btn').disabled = !canUseSkill;
     document.getElementById('combo-btn').disabled = !canUseSkill;
     document.getElementById('ky-nang-btn').disabled = !canUseSkill;
+    document.getElementById('hoi-mau-btn').disabled = !canHeal;
     
     if (!canUseSkill) {
         document.getElementById('trung-phat-btn').title = "Cần 100 nộ";
@@ -321,6 +356,12 @@ function updateSkillButtons() {
         document.getElementById('trung-phat-btn').title = "";
         document.getElementById('combo-btn').title = "";
         document.getElementById('ky-nang-btn').title = "";
+    }
+    
+    if (!canHeal) {
+        document.getElementById('hoi-mau-btn').title = `Cooldown: ${nguoi_choi.hoi_mau_cooldown} lượt`;
+    } else {
+        document.getElementById('hoi-mau-btn').title = "Sẵn sàng";
     }
 }
 
@@ -447,3 +488,4 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('restart-btn').onclick = khoi_tao_game;
     khoi_tao_game();
 });
+
