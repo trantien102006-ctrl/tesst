@@ -1,45 +1,51 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Turn-based Battle Game</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>RoK Simulator Web by Grok</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-    <div id="game-container">
-        <!-- Cột trái: Thông tin nhân vật và menu -->
-        <div id="left-panel">
-            <h1>⚔️ Turn-based Battle Game ⚔️</h1>
-            <div id="status">🌀 Trận chiến bắt đầu!</div>
-            
-            <div class="stat-row">
-                <div id="player-stats" class="character-block">
-                    <!-- Player stats will be loaded here -->
-                </div>
-                <div id="enemy-stats" class="character-block">
-                    <!-- Enemy stats will be loaded here -->
-                </div>
-            </div>
-            
-            <div id="menu">
-                <!-- Menu buttons will be loaded here -->
-            </div>
-            
-            <button id="restart-btn" style="display: none;">🔄 Chơi lại</button>
-        </div>
-        
-        <!-- Cột phải: Thông tin chiến đấu -->
-        <div id="right-panel">
-            <h2>📊 Nhật ký chiến đấu</h2>
-            <div id="damage-log">
-                <!-- Battle log will be displayed here -->
-            </div>
-        </div>
+  <div class="container">
+    <h1>Rise of Kingdoms Simulator</h1>
+    <div class="tabs">
+      <button class="tab-btn active" onclick="openTab('battle')">Chiến Đấu</button>
+      <button class="tab-btn" onclick="openTab('train')">Rèn Lính</button>
+      <button class="tab-btn" onclick="openTab('chest')">Mở Rương</button>
+      <button class="tab-btn" onclick="openTab('stats')">Tài Nguyên</button>
     </div>
 
-    <script src="main.js"></script>
+    <!-- Tab Chiến Đấu -->
+    <div id="battle" class="tab-content active">
+      <h2>Chọn trận đấu</h2>
+      <select id="general1">
+        <option value="takemasa">Takemasa (Bộ binh)</option>
+        <option value="ren">Ren (Cung thủ)</option>
+        <option value="shinya">Shinya (Kỵ binh)</option>
+      </select>
+      <input type="number" id="troops1" value="15000" min="1000"/>
+      <span>vs</span>
+      <select id="general2">
+        <option value="ren">Ren (Cung thủ)</option>
+        <option value="shinya">Shinya (Kỵ binh)</option>
+        <option value="takemasa">Takemasa (Bộ binh)</option>
+      </select>
+      <input type="number" id="troops2" value="10000" min="1000"/>
+      <br><br>
+      <button onclick="startBattle()">Bắt Đầu Chiến Đấu</button>
+      <pre id="battleLog"></pre>
+    </div>
+
+    <!-- Tab Rèn Lính, Mở Rương, Stats -->
+    <div id="train" class="tab-content"><h2>Rèn lính đang phát triển...</h2></div>
+    <div id="chest" class="tab-content"><h2>Mở rương đang phát triển...</h2></div>
+    <div id="stats" class="tab-content"><h2>Gems: <span id="gems">0</span></h2></div>
+  </div>
+
+  <script src="script.js"></script>
 </body>
 </html>
+
 
 
