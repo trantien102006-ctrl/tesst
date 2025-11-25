@@ -1,416 +1,160 @@
-// Game state với giá trị mặc định
-let gameState = {
-    soQuan: 0,
-    ruong: 50,
-    dangRen: false,
-    thoiGianCon: 0,
-    timerInterval: null,
-    startTime: null,
-    endTime: null,
-    soQuanDangRen: 0,
-    
-    manhTuong: {
-        Takemasa: 0,
-        Ren: 0,
-        Shinya: 0
-    },
-    
-    vatPham: {
-        "Giảm 1 phút rèn luyện": 0,
-        "Giảm 5 phút rèn luyện": 0,
-        "Giảm 10 phút rèn luyện": 0,
-        "Giảm 30 phút rèn luyện": 0
-    }
-};
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trại Rèn Lính</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Popup chọn tướng ban đầu -->
+    <div id="chonTuongPopup" class="popup-overlay active">
+        <div class="popup-content">
+            <div class="popup-header">
+                <h2>Chọn Tướng Ban Đầu</h2>
+            </div>
+            <div class="chon-tuong-content">
+                <p>Chào mừng đến với Trại Rèn Lính! Hãy chọn một vị tướng để bắt đầu:</p>
+                <div class="tuong-options">
+                    <div class="tuong-option" data-tuong="Takemasa">
+                        <div class="tuong-avatar">⚔️</div>
+                        <h3>Takemasa</h3>
+                        <p>Tướng tấn công mạnh mẽ</p>
+                    </div>
+                    <div class="tuong-option" data-tuong="Ren">
+                        <div class="tuong-avatar">🛡️</div>
+                        <h3>Ren</h3>
+                        <p>Tướng phòng thủ vững chắc</p>
+                    </div>
+                </div>
+                <button id="btnXacNhanTuong" class="confirm-btn" disabled>Xác Nhận</button>
+            </div>
+        </div>
+    </div>
 
-// Danh sách vật phẩm có thể nhận từ rương
-const bangVatPham = [
-    { ten: "Giảm 1 phút rèn luyện", tyLe: 40, loai: "giamtg", giam: 60 },
-    { ten: "Giảm 5 phút rèn luyện", tyLe: 30, loai: "giamtg", giam: 300 },
-    { ten: "Giảm 10 phút rèn luyện", tyLe: 20, loai: "giamtg", giam: 600 },
-    { ten: "Giảm 30 phút rèn luyện", tyLe: 10, loai: "giamtg", giam: 1800 },
-    { ten: "Mảnh Takemasa", tyLe: 10, loai: "manh" },
-    { ten: "Mảnh Ren", tyLe: 10, loai: "manh" },
-    { ten: "Mảnh Shinya", tyLe: 10, loai: "manh" }
-];
+    <div class="game-container">
+        <!-- Header -->
+        <header class="game-header">
+            <div class="header-stats">
+                <div class="stat-item">
+                    <span class="stat-label">Rương Bạc:</span>
+                    <span id="ruongBac" class="stat-value">100</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Rương Vàng:</span>
+                    <span id="ruongVang" class="stat-value">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Rương Kim Cương:</span>
+                    <span id="ruongKimCuong" class="stat-value">0</span>
+                </div>
+            </div>
+            <button id="btnInventory" class="inventory-btn">🎒 Túi Đồ</button>
+        </header>
 
-// Lưu game state vào localStorage
-function saveGame() {
-    const saveData = {
-        ...gameState,
-        timerInterval: null // Không lưu interval
-    };
-    localStorage.setItem('gameRenQuan', JSON.stringify(saveData));
-}
+        <!-- Thông tin lính -->
+        <div class="linh-stats">
+            <div class="linh-type">
+                <h3>🪖 Lính Bộ</h3>
+                <div id="linhBo" class="linh-count">0</div>
+            </div>
+            <div class="linh-type">
+                <h3>🐎 Lính Kỵ</h3>
+                <div id="linhKy" class="linh-count">0</div>
+            </div>
+            <div class="linh-type">
+                <h3>🏹 Lính Cung</h3>
+                <div id="linhCung" class="linh-count">0</div>
+            </div>
+        </div>
 
-// Tải game state từ localStorage
-function loadGame() {
-    const saved = localStorage.getItem('gameRenQuan');
-    if (saved) {
-        const loadedState = JSON.parse(saved);
-        
-        // Kiểm tra nếu có quá trình rèn quân đang diễn ra
-        if (loadedState.dangRen && loadedState.endTime) {
-            const now = Date.now();
-            const endTime = loadedState.endTime;
+        <!-- Timer -->
+        <div id="timer" class="timer">00:00</div>
+
+        <!-- Khu vực rèn lính -->
+        <div class="ren-section">
+            <h3>Rèn Lính</h3>
+            <div class="ren-options">
+                <button id="btnRenBo" class="ren-btn">
+                    Rèn 100 Lính Bộ<br>
+                    <small>(10 phút)</small>
+                </button>
+                <button id="btnRenKy" class="ren-btn">
+                    Rèn 100 Lính Kỵ<br>
+                    <small>(15 phút)</small>
+                </button>
+                <button id="btnRenCung" class="ren-btn">
+                    Rèn 100 Lính Cung<br>
+                    <small>(12 phút)</small>
+                </button>
+            </div>
+        </div>
+
+        <!-- Khu vực mở rương -->
+        <div class="ruong-section">
+            <h3>Mở Rương</h3>
+            <div class="ruong-options">
+                <button id="btnMoBac" class="ruong-btn bac">
+                    Mở Rương Bạc<br>
+                    <small>(Tỷ lệ cơ bản)</small>
+                </button>
+                <button id="btnMoVang" class="ruong-btn vang">
+                    Mở Rương Vàng<br>
+                    <small>(Tăng tỷ lệ mảnh tướng)</small>
+                </button>
+                <button id="btnMoKimCuong" class="ruong-btn kimcuong">
+                    Mở Rương Kim Cương<br>
+                    <small>(Cơ hội nhận tướng)</small>
+                </button>
+            </div>
+        </div>
+
+        <!-- Khu vực đánh ải -->
+        <div class="ai-section">
+            <h3>Chiến Trường</h3>
+            <div class="ai-info">
+                <div class="ai-level">Ải hiện tại: <span id="aiHienTai">1</span></div>
+                <div class="ai-reward">Thưởng: <span id="aiThuong">1 Rương Bạc</span></div>
+            </div>
+            <button id="btnDanhAi" class="danh-ai-btn">⚔️ Đánh Ải</button>
+        </div>
+
+        <!-- Kết quả -->
+        <div id="ketQuaMo" class="results-container"></div>
+    </div>
+
+    <!-- Popup Túi Đồ -->
+    <div id="inventoryPopup" class="popup-overlay">
+        <div class="popup-content">
+            <div class="popup-header">
+                <h2>🎒 Túi Đồ</h2>
+                <button id="btnCloseInventory" class="close-btn">✕</button>
+            </div>
             
-            if (now < endTime) {
-                // Quá trình rèn quân chưa kết thúc
-                gameState = { ...loadedState };
-                gameState.thoiGianCon = Math.floor((endTime - now) / 1000);
-                gameState.dangRen = true;
-                startTimer();
-                console.log("Tiếp tục rèn quân...");
-            } else {
-                // Quá trình rèn quân đã kết thúc - SỬA LỖI QUAN TRỌNG
-                const soQuanDangRen = loadedState.soQuanDangRen || 0;
-                gameState = { ...loadedState };
-                gameState.soQuan += soQuanDangRen; // CỘNG LÍNH VÀO ĐÂY
-                gameState.dangRen = false;
-                gameState.thoiGianCon = 0;
-                gameState.startTime = null;
-                gameState.endTime = null;
-                gameState.soQuanDangRen = 0;
-                console.log("Rèn quân hoàn thành!");
-            }
-        } else {
-            gameState = { ...loadedState };
-            gameState.dangRen = false;
-            gameState.thoiGianCon = 0;
-        }
-        
-        console.log("Game đã được tải!");
-        return true;
-    }
-    return false;
-}
-
-// Khởi tạo game
-function initGame() {
-    console.log("🚀 Đang khởi động game...");
-    
-    // Thử tải game đã lưu
-    if (!loadGame()) {
-        console.log("Không tìm thấy dữ liệu đã lưu, bắt đầu game mới");
-    }
-    
-    // Gán sự kiện cho các nút chính
-    document.getElementById('btnRen100').addEventListener('click', () => renQuan(100));
-    document.getElementById('btnRen1000').addEventListener('click', () => renQuan(1000));
-    document.getElementById('btnMo1').addEventListener('click', () => moRuong(1));
-    document.getElementById('btnMo10').addEventListener('click', () => moRuong(10));
-    
-    // Sự kiện cho túi đồ
-    document.getElementById('btnInventory').addEventListener('click', openInventory);
-    document.getElementById('btnCloseInventory').addEventListener('click', closeInventory);
-    
-    // Sự kiện cho tabs
-    document.querySelectorAll('.tab-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            const tabName = e.target.getAttribute('data-tab');
-            switchTab(tabName);
-        });
-    });
-    
-    updateUI();
-    console.log("✅ Game đã sẵn sàng!");
-}
-
-// Mở túi đồ
-function openInventory() {
-    document.getElementById('inventoryPopup').classList.add('active');
-    updateInventoryUI();
-}
-
-// Đóng túi đồ
-function closeInventory() {
-    document.getElementById('inventoryPopup').classList.remove('active');
-}
-
-// Chuyển tab
-function switchTab(tabName) {
-    // Ẩn tất cả tab
-    document.querySelectorAll('.tab-pane').forEach(tab => {
-        tab.classList.remove('active');
-    });
-    document.querySelectorAll('.tab-btn').forEach(btn => {
-        btn.classList.remove('active');
-    });
-    
-    // Hiện tab được chọn
-    document.getElementById(`tab${tabName.charAt(0).toUpperCase() + tabName.slice(1)}`).classList.add('active');
-    document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
-}
-
-// Cập nhật giao diện chính
-function updateUI() {
-    // Cập nhật thống kê cơ bản
-    document.getElementById('soQuan').textContent = gameState.soQuan.toLocaleString();
-    document.getElementById('ruong').textContent = gameState.ruong;
-    
-    // Cập nhật timer
-    const minutes = String(Math.floor(gameState.thoiGianCon / 60)).padStart(2, '0');
-    const seconds = String(gameState.thoiGianCon % 60).padStart(2, '0');
-    document.getElementById('timer').textContent = `${minutes}:${seconds}`;
-    
-    // Kiểm tra điều kiện ghép tướng
-    checkGeneralCombination();
-    
-    // Lưu game
-    saveGame();
-}
-
-// Cập nhật giao diện túi đồ
-function updateInventoryUI() {
-    // Cập nhật mảnh tướng
-    const manhTuongContainer = document.getElementById('manhTuong');
-    manhTuongContainer.innerHTML = '';
-    
-    Object.entries(gameState.manhTuong).forEach(([ten, soLuong]) => {
-        const itemDiv = document.createElement('div');
-        itemDiv.className = 'inventory-item manh-tuong';
-        itemDiv.innerHTML = `
-            <div class="item-name">${ten}</div>
-            <div class="item-count">${soLuong}/100</div>
-        `;
-        manhTuongContainer.appendChild(itemDiv);
-    });
-    
-    // Cập nhật vật phẩm
-    const vatPhamContainer = document.getElementById('vatPham');
-    vatPhamContainer.innerHTML = '';
-    
-    Object.entries(gameState.vatPham).forEach(([ten, soLuong]) => {
-        const itemDiv = document.createElement('div');
-        itemDiv.className = 'inventory-item vat-pham';
-        itemDiv.innerHTML = `
-            <div class="item-name">${ten}</div>
-            <div class="item-count">${soLuong}</div>
-        `;
-        vatPhamContainer.appendChild(itemDiv);
-    });
-    
-    // Cập nhật nút sử dụng vật phẩm
-    updateUseItems();
-}
-
-// Cập nhật nút sử dụng vật phẩm
-function updateUseItems() {
-    const useContainer = document.getElementById('suDungVatPham');
-    useContainer.innerHTML = '';
-    
-    // Chỉ hiển thị nút sử dụng nếu đang rèn quân
-    if (gameState.dangRen) {
-        Object.entries(gameState.vatPham).forEach(([ten, soLuong]) => {
-            if (soLuong > 0) {
-                const useButton = document.createElement('button');
-                useButton.className = 'use-btn';
-                useButton.textContent = `Sử dụng ${ten} (${soLuong})`;
-                useButton.addEventListener('click', () => suDungVatPham(ten));
-                useContainer.appendChild(useButton);
-            }
-        });
-        
-        if (useContainer.children.length === 0) {
-            useContainer.innerHTML = '<p style="text-align: center; color: #ccc;">Không có vật phẩm để sử dụng</p>';
-        }
-    } else {
-        useContainer.innerHTML = '<p style="text-align: center; color: #ccc;">Không có quân đang rèn</p>';
-    }
-}
-
-// Bắt đầu đếm ngược
-function startTimer() {
-    if (gameState.timerInterval) {
-        clearInterval(gameState.timerInterval);
-    }
-    
-    gameState.timerInterval = setInterval(() => {
-        if (gameState.thoiGianCon <= 0) {
-            clearInterval(gameState.timerInterval);
-            // QUAN TRỌNG: Cộng lính khi hết thời gian
-            gameState.soQuan += gameState.soQuanDangRen;
-            gameState.dangRen = false;
-            gameState.thoiGianCon = 0;
-            gameState.startTime = null;
-            gameState.endTime = null;
-            gameState.soQuanDangRen = 0;
-            updateUI();
-            alert(`🎉 Rèn thành công ${gameState.soQuanDangRen.toLocaleString()} lính!`);
-            return;
-        }
-        gameState.thoiGianCon--;
-        updateUI();
-    }, 1000);
-}
-
-// Rèn quân - ĐÃ SỬA LỖI
-function renQuan(so) {
-    if (gameState.dangRen) {
-        alert("Đang rèn quân rồi đại ca!");
-        return;
-    }
-    
-    const phut = so / 10;
-    gameState.thoiGianCon = phut * 60;
-    gameState.dangRen = true;
-    gameState.startTime = Date.now();
-    gameState.endTime = gameState.startTime + (gameState.thoiGianCon * 1000);
-    gameState.soQuanDangRen = so; // Lưu số quân đang rèn
-    
-    startTimer();
-    updateUI();
-}
-
-// Mở rương
-function moRuong(so) {
-    if (gameState.ruong < so) {
-        alert("Hết rương rồi đại ca ơi!");
-        return;
-    }
-    
-    gameState.ruong -= so;
-    const resultsContainer = document.getElementById('ketQuaMo');
-    resultsContainer.innerHTML = `<h3 style="color: #ffd700; text-align: center; margin-bottom: 15px;">🎁 Kết quả mở ${so} rương:</h3>`;
-    
-    const results = [];
-    
-    for (let i = 0; i < so; i++) {
-        const rand = Math.random() * 100;
-        let cumulativeRate = 0;
-        let selectedItem = bangVatPham[0];
-        
-        for (const item of bangVatPham) {
-            cumulativeRate += item.tyLe;
-            if (rand <= cumulativeRate) {
-                selectedItem = item;
-                break;
-            }
-        }
-        
-        // Xử lý kết quả
-        if (selectedItem.loai === "manh") {
-            const generalName = selectedItem.ten.replace("Mảnh ", "");
-            gameState.manhTuong[generalName]++;
-            results.push({
-                text: `✨ ${selectedItem.ten} ✨`,
-                isRare: true
-            });
-        } else {
-            gameState.vatPham[selectedItem.ten]++;
-            results.push({
-                text: selectedItem.ten,
-                isRare: false
-            });
-        }
-    }
-    
-    // Hiển thị kết quả với hiệu ứng
-    displayResults(results);
-    updateUI();
-}
-
-// Hiển thị kết quả với hiệu ứng
-function displayResults(results) {
-    const resultsContainer = document.getElementById('ketQuaMo');
-    let index = 0;
-    
-    function showNextResult() {
-        if (index < results.length) {
-            const resultDiv = document.createElement('div');
-            resultDiv.className = `result-item ${results[index].isRare ? 'rare pulse' : 'common'}`;
-            resultDiv.textContent = results[index].text;
-            resultsContainer.appendChild(resultDiv);
+            <div class="inventory-tabs">
+                <button class="tab-btn active" data-tab="manhTuong">Mảnh Tướng</button>
+                <button class="tab-btn" data-tab="vatPham">Giảm Thời Gian</button>
+                <button class="tab-btn" data-tab="tuong">Tướng</button>
+            </div>
             
-            index++;
-            setTimeout(showNextResult, 400);
-        }
-    }
-    
-    showNextResult();
-}
+            <div class="tab-content">
+                <div id="tabManhTuong" class="tab-pane active">
+                    <div id="manhTuong" class="items-grid"></div>
+                </div>
+                <div id="tabVatPham" class="tab-pane">
+                    <div id="vatPham" class="items-grid"></div>
+                    <div class="use-section">
+                        <h3>Sử Dụng Vật Phẩm</h3>
+                        <div id="suDungVatPham" class="use-buttons"></div>
+                    </div>
+                </div>
+                <div id="tabTuong" class="tab-pane">
+                    <div id="tuong" class="items-grid"></div>
+                </div>
+            </div>
+        </div>
+    </div>
 
-// Kiểm tra điều kiện ghép tướng
-function checkGeneralCombination() {
-    const resultsContainer = document.getElementById('ketQuaMo');
-    let combineSection = document.querySelector('.combine-section');
-    
-    if (combineSection) {
-        combineSection.remove();
-    }
-    
-    let combineHTML = '';
-    let canCombine = false;
-    
-    if (gameState.manhTuong.Takemasa >= 100) {
-        combineHTML += `<button class="use-btn" onclick="combineGeneral('Takemasa')">⚔️ Ghép Tướng Takemasa</button>`;
-        canCombine = true;
-    }
-    if (gameState.manhTuong.Ren >= 100) {
-        combineHTML += `<button class="use-btn" onclick="combineGeneral('Ren')">⚔️ Ghép Tướng Ren</button>`;
-        canCombine = true;
-    }
-    if (gameState.manhTuong.Shinya >= 100) {
-        combineHTML += `<button class="use-btn" onclick="combineGeneral('Shinya')">⚔️ Ghép Tướng Shinya</button>`;
-        canCombine = true;
-    }
-    
-    if (canCombine) {
-        combineSection = document.createElement('div');
-        combineSection.className = 'combine-section';
-        combineSection.innerHTML = `
-            <h3>🌟 Ghép Tướng 🌟</h3>
-            <div class="use-buttons">${combineHTML}</div>
-        `;
-        resultsContainer.appendChild(combineSection);
-    }
-}
-
-// Ghép tướng
-function combineGeneral(generalName) {
-    if (gameState.manhTuong[generalName] >= 100) {
-        gameState.manhTuong[generalName] -= 100;
-        alert(`🎉 Chúc mừng! Bạn đã ghép thành công tướng ${generalName}!`);
-        updateUI();
-        updateInventoryUI();
-    } else {
-        alert(`❌ Không đủ mảnh để ghép tướng ${generalName}!`);
-    }
-}
-
-// Sử dụng vật phẩm giảm thời gian
-function suDungVatPham(tenVatPham) {
-    if (gameState.vatPham[tenVatPham] <= 0) {
-        alert(`Bạn không có ${tenVatPham}!`);
-        return;
-    }
-    
-    if (!gameState.dangRen) {
-        alert("Không có quân nào đang được rèn!");
-        return;
-    }
-    
-    // Tìm vật phẩm trong danh sách để lấy số giây giảm
-    const vatPham = bangVatPham.find(item => item.ten === tenVatPham);
-    if (!vatPham) {
-        alert("Vật phẩm không tồn tại!");
-        return;
-    }
-    
-    const giamGiay = vatPham.giam;
-    gameState.thoiGianCon = Math.max(0, gameState.thoiGianCon - giamGiay);
-    
-    // Cập nhật thời gian kết thúc
-    if (gameState.endTime) {
-        gameState.endTime -= (giamGiay * 1000);
-    }
-    
-    gameState.vatPham[tenVatPham]--;
-    
-    alert(`Đã sử dụng ${tenVatPham}, giảm ${giamGiay/60} phút!`);
-    updateUI();
-    updateInventoryUI();
-}
-
-// Khởi động game khi trang load
-document.addEventListener('DOMContentLoaded', initGame);
+    <script src="script.js"></script>
+</body>
+</html>
