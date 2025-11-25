@@ -1,53 +1,159 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>RO TURN-BASE - Game Chiến Lượt Lượt</title>
-  <link rel="stylesheet" href="style.css" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Rèn Quân</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f0f0f0;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .anhhung {
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin: 5px;
+            border-radius: 5px;
+        }
+        .legendary {
+            border-color: #ff00ff;
+            background-color: #fff0ff;
+        }
+        #timer {
+            font-size: 2em;
+            color: red;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            font-size: 1em;
+            cursor: pointer;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+    </style>
 </head>
 <body>
-  <div class="container">
-    <h1>RO TURN-BASE</h1>
-    <p class="subtitle">Game chiến đấu lượt - Rèn quân - Mở rương - Đấu trường</p>
-
-    <!-- RÈN QUÂN -->
-    <div class="section">
-      <h2>Rèn Quân (10 lính = 1 phút thật)</h2>
-      <p>Quân số hiện tại: <span id="soQuan">0</span></p>
-      <div class="btn-group">
-        <button onclick="renQuan(100)">Rèn 100 quân (10 phút)</button>
-        <button onclick="renQuan(1000)">Rèn 1.000 quân (100 phút)</button>
-        <button onclick="renQuan(5000)">Rèn 5.000 quân (500 phút)</button>
-      </div%,
-      <p>Đang rèn... <span id="timer">00:00</span></p>
+    <div class="container">
+        <h1>Game Rèn Quân và Mở Rương</h1>
+        <div>
+            <h2>Số quân: <span id="soQuan">0</span></h2>
+            <h2>Rương: <span id="ruong">50</span></h2>
+            <div id="timer">00:00</div>
+            <div>
+                <button onclick="renQuan(100)">Rèn 100 lính (10 phút)</button>
+                <button onclick="renQuan(1000)">Rèn 1000 lính (100 phút)</button>
+            </div>
+            <div>
+                <button onclick="moRuong(1)">Mở 1 rương</button>
+                <button onclick="moRuong(10)">Mở 10 rương</button>
+            </div>
+        </div>
+        <div id="ketQuaMo"></div>
+        <h2>Danh sách anh hùng</h2>
+        <div id="dsAnhHung"></div>
     </div>
 
-    <!-- MỞ RƯƠNG -->
-    <div class="section">
-      <h2>Mở Rương Thần Bí</h2>
-      <p>Rương còn: <span id="ruong">30</span></p>
-      <div class="btn-group">
-        <button onclick="moRuong(1)">Mở 1 rương</button>
-        <button onclick="moRuong(10)">Mở 10 rương</button>
-      </div>
-      <div id="ketQuaMo" class="result"></div>
-    </div>
+    <script>
+        let soQuan = 0;
+        let ruong = 50;
+        let danhSachAnhHung = [];
+        let dangRen = false;
+        let thoiGianCon = 0;
 
-    <!-- DANH SÁCH ANH HÙNG -->
-    <div class="section">
-      <h2>Anh Hùng Của Bạn</h2>
-      <div id="dsAnhHung"></div>
-    </div>
+        // Danh sách anh hùng (tỷ lệ chuẩn game turn-base)
+        const bangAnhHung = [
+          { ten: "Thần Kiếm Thánh Vương", tyLe: 0.3, cap: "Legendary" },
+          { ten: "Hắc Long Đế", tyLe: 0.5, cap: "Legendary" },
+          { ten: "Tử Thần Nữ Vương", tyLe: 0.7, cap: "Legendary" },
+          { ten: "Phượng Hoàng Chiến Thần", tyLe: 1.0, cap: "Epic" },
+          { ten: "Băng Phong Ma Nữ", tyLe: 1.5, cap: "Epic" },
+          { ten: "Lôi Thần", tyLe: 2.0, cap: "Epic" },
+          { ten: "Hiệp Khách Vô Danh", tyLe: 8.0, cap: "Rare" },
+          { ten: "Chiến Binh", tyLe: 86.0, cap: "Common" }
+        ];
 
-    <div class="footer">
-      RO TURN-BASE © 2025 - Made for Đại Ca
-    </div>
-  </div>
+        function capNhat() {
+          document.getElementById("soQuan").textContent = soQuan.toLocaleString();
+          document.getElementById("ruong").textContent = ruong;
+          document.getElementById("dsAnhHung").innerHTML = danhSachAnhHung.map(h => 
+            `<div class="anhhung ${h.cap === 'Legendary' ? 'legendary' : ''}">
+              <strong>${h.ten}</strong><br><small>${h.cap}</small>
+            </div>`
+          ).join("");
+        }
 
-  <script src="script.js"></script>
+        function demNguoc() {
+          if (thoiGianCon <= 0) {
+            dangRen = false;
+            capNhat();
+            return;
+          }
+          thoiGianCon--;
+          const m = String(Math.floor(thoiGianCon / 60)).padStart(2, '0');
+          const s = String(thoiGianCon % 60).padStart(2, '0');
+          document.getElementById("timer").textContent = `${m}:${s}`;
+          setTimeout(demNguoc, 1000);
+        }
+
+        function renQuan(so) {
+          if (dangRen) return alert("Đang rèn quân rồi đại ca!");
+          const phut = so / 10;
+          thoiGianCon = phut * 60;
+          dangRen = true;
+          demNguoc();
+          setTimeout(() => {
+            soQuan += so;
+            dangRen = false;
+            document.getElementById("timer").textContent = "00:00";
+            capNhat();
+          }, thoiGianCon * 1000);
+        }
+
+        function moRuong(so) {
+          if (ruong < so) return alert("Hết rương rồi đại ca ơi!");
+          ruong -= so;
+          let html = "";
+          for (let i = 0; i < so; i++) {
+            const rand = Math.random() * 100;
+            let tong = 0;
+            let ra = bangAnhHung[bangAnhHung.length - 1]; // default
+            for (const ah of bangAnhHung) {
+              tong += ah.tyLe;
+              if (rand <= tong) { 
+                ra = ah; 
+                break; 
+              }
+            }
+            danhSachAnhHung.push(ra);
+            if (ra.cap === "Legendary") {
+              html += `<div style="color:#ff00ff; font-size:2em; animation: pulse 1s infinite;">✦ ${ra.ten} ✦</div>`;
+            } else {
+              html += `<div>${ra.ten} (${ra.cap})</div>`;
+            }
+          }
+          document.getElementById("ketQuaMo").innerHTML = html || "<div>Chỉ ra anh hùng thường...</div>";
+          capNhat();
+        }
+
+        // Khởi động
+        capNhat();
+    </script>
 </body>
 </html>
+
 
 
 
