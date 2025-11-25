@@ -9,33 +9,46 @@
 <body>
     <div class="container">
         <h1>Game Rèn Quân và Mở Rương</h1>
-        <div>
+        <div class="game-info">
             <h2>Số quân: <span id="soQuan">0</span></h2>
             <h2>Rương: <span id="ruong">50</span></h2>
             <div id="timer">00:00</div>
-            <div>
-                <button onclick="renQuan(100)">Rèn 100 lính (10 phút)</button>
-                <button onclick="renQuan(1000)">Rèn 1000 lính (100 phút)</button>
+        </div>
+        
+        <div class="control-section">
+            <h3>Rèn Quân</h3>
+            <div class="button-group">
+                <button id="ren100">Rèn 100 lính (10 phút)</button>
+                <button id="ren1000">Rèn 1000 lính (100 phút)</button>
             </div>
-            <div>
-                <button onclick="moRuong(1)">Mở 1 rương</button>
-                <button onclick="moRuong(10)">Mở 10 rương</button>
+            
+            <h3>Mở Rương</h3>
+            <div class="button-group">
+                <button id="mo1">Mở 1 rương</button>
+                <button id="mo10">Mở 10 rương</button>
             </div>
         </div>
         
-        <div id="ketQuaMo"></div>
+        <div id="ketQuaMo" class="result-section"></div>
         
         <div class="tuong-section">
             <h2>Mảnh Tướng</h2>
-            <div id="manhTuong">
+            <div id="manhTuong" class="item-grid">
                 <!-- Hiển thị mảnh tướng -->
             </div>
         </div>
         
         <div class="tuong-section">
             <h2>Vật Phẩm Giảm Thời Gian</h2>
-            <div id="vatPham">
+            <div id="vatPham" class="item-grid">
                 <!-- Hiển thị vật phẩm -->
+            </div>
+        </div>
+
+        <div class="su-dung-section">
+            <h3>Sử Dụng Vật Phẩm</h3>
+            <div id="nutSuDung" class="button-group">
+                <!-- Nút sử dụng vật phẩm sẽ được tạo tự động -->
             </div>
         </div>
     </div>
@@ -43,6 +56,7 @@
     <script src="script.js"></script>
 </body>
 </html>
+
 
 
 
