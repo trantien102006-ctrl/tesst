@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Trại Rèn Lính</title>
+    <title>Trại Lính - Game Chiến Thuật</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -14,17 +14,19 @@
                 <h2>Chọn Tướng Ban Đầu</h2>
             </div>
             <div class="chon-tuong-content">
-                <p>Chào mừng đến với Trại Rèn Lính! Hãy chọn một vị tướng để bắt đầu:</p>
+                <p>Chào mừng đến với Trại Lính! Hãy chọn một vị tướng để bắt đầu:</p>
                 <div class="tuong-options">
                     <div class="tuong-option" data-tuong="Takemasa">
                         <div class="tuong-avatar">⚔️</div>
                         <h3>Takemasa</h3>
-                        <p>Tướng tấn công mạnh mẽ</p>
+                        <p>+10% sức mạnh Lính Bộ</p>
+                        <div class="tuong-bonus">Tăng 10% sức mạnh Lính Bộ</div>
                     </div>
                     <div class="tuong-option" data-tuong="Ren">
-                        <div class="tuong-avatar">🛡️</div>
+                        <div class="tuong-avatar">🏹</div>
                         <h3>Ren</h3>
-                        <p>Tướng phòng thủ vững chắc</p>
+                        <p>+10% sức mạnh Lính Cung</p>
+                        <div class="tuong-bonus">Tăng 10% sức mạnh Lính Cung</div>
                     </div>
                 </div>
                 <button id="btnXacNhanTuong" class="confirm-btn" disabled>Xác Nhận</button>
@@ -37,16 +39,20 @@
         <header class="game-header">
             <div class="header-stats">
                 <div class="stat-item">
-                    <span class="stat-label">Rương Bạc:</span>
+                    <span class="stat-label">Rương Bạc</span>
                     <span id="ruongBac" class="stat-value">100</span>
                 </div>
                 <div class="stat-item">
-                    <span class="stat-label">Rương Vàng:</span>
+                    <span class="stat-label">Rương Vàng</span>
                     <span id="ruongVang" class="stat-value">0</span>
                 </div>
                 <div class="stat-item">
-                    <span class="stat-label">Rương Kim Cương:</span>
+                    <span class="stat-label">Rương Kim Cương</span>
                     <span id="ruongKimCuong" class="stat-value">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Trạng Thái</span>
+                    <span id="onlineStatus" class="stat-value">🟢 Online</span>
                 </div>
             </div>
             <button id="btnInventory" class="inventory-btn">🎒 Túi Đồ</button>
@@ -55,25 +61,28 @@
         <!-- Thông tin lính -->
         <div class="linh-stats">
             <div class="linh-type">
-                <h3>🪖 Lính Bộ</h3>
+                <h3>🪖 Lính Bộ <span id="bonusBo" style="font-size: 0.8em; color: #4CAF50;">+0%</span></h3>
                 <div id="linhBo" class="linh-count">0</div>
             </div>
             <div class="linh-type">
-                <h3>🐎 Lính Kỵ</h3>
+                <h3>🐎 Lính Kỵ <span id="bonusKy" style="font-size: 0.8em; color: #4CAF50;">+0%</span></h3>
                 <div id="linhKy" class="linh-count">0</div>
             </div>
             <div class="linh-type">
-                <h3>🏹 Lính Cung</h3>
+                <h3>🏹 Lính Cung <span id="bonusCung" style="font-size: 0.8em; color: #4CAF50;">+0%</span></h3>
                 <div id="linhCung" class="linh-count">0</div>
             </div>
         </div>
 
-        <!-- Timer -->
+        <!-- Timer và thông tin rèn -->
         <div id="timer" class="timer">00:00</div>
+        <div style="text-align: center; margin-bottom: 20px; color: #ccc;" id="renInfo">
+            Không có lính đang rèn
+        </div>
 
         <!-- Khu vực rèn lính -->
         <div class="ren-section">
-            <h3>Rèn Lính</h3>
+            <h3>⚔️ Rèn Lính</h3>
             <div class="ren-options">
                 <button id="btnRenBo" class="ren-btn">
                     Rèn 100 Lính Bộ<br>
@@ -92,7 +101,7 @@
 
         <!-- Khu vực mở rương -->
         <div class="ruong-section">
-            <h3>Mở Rương</h3>
+            <h3>🎁 Mở Rương</h3>
             <div class="ruong-options">
                 <button id="btnMoBac" class="ruong-btn bac">
                     Mở Rương Bạc<br>
@@ -109,18 +118,46 @@
             </div>
         </div>
 
-        <!-- Khu vực đánh ải -->
+        <!-- Khu vực chiến trường -->
         <div class="ai-section">
-            <h3>Chiến Trường</h3>
+            <h3>⚔️ Chiến Trường</h3>
             <div class="ai-info">
                 <div class="ai-level">Ải hiện tại: <span id="aiHienTai">1</span></div>
+                <div class="ai-enemy">Kẻ địch: <span id="aiEnemy">Slime</span></div>
                 <div class="ai-reward">Thưởng: <span id="aiThuong">1 Rương Bạc</span></div>
             </div>
+            
+            <!-- Thông tin quân đội -->
+            <div class="army-info" style="background: rgba(0,0,0,0.3); padding: 10px; border-radius: 8px; margin: 10px 0;">
+                <h4>💂 Quân Đội Của Bạn:</h4>
+                <div style="display: flex; justify-content: space-between;">
+                    <span>Bộ: <span id="armyBo">0</span></span>
+                    <span>Kỵ: <span id="armyKy">0</span></span>
+                    <span>Cung: <span id="armyCung">0</span></span>
+                    <span>Tổng: <span id="armyTotal">0</span></span>
+                </div>
+            </div>
+
+            <!-- Thông tin quái vật -->
+            <div class="enemy-info" style="background: rgba(255,0,0,0.2); padding: 10px; border-radius: 8px; margin: 10px 0;">
+                <h4>👹 Quái Vật:</h4>
+                <div style="display: flex; justify-content: space-between;">
+                    <span>Tên: <span id="enemyName">Slime</span></span>
+                    <span>Sức mạnh: <span id="enemyPower">50</span></span>
+                    <span>Máu: <span id="enemyHealth">100</span></span>
+                </div>
+            </div>
+
             <button id="btnDanhAi" class="danh-ai-btn">⚔️ Đánh Ải</button>
+            <button id="btnAutoDanhAi" class="danh-ai-btn" style="margin-top: 10px; background: linear-gradient(135deg, #4CAF50, #45a049);">
+                🔄 Tự Động Đánh Ải
+            </button>
         </div>
 
-        <!-- Kết quả -->
-        <div id="ketQuaMo" class="results-container"></div>
+        <!-- Kết quả mở rương -->
+        <div id="ketQuaMo" class="results-container">
+            <p style="text-align: center; color: #ccc;">Kết quả mở rương sẽ hiển thị ở đây</p>
+        </div>
     </div>
 
     <!-- Popup Túi Đồ -->
@@ -133,7 +170,7 @@
             
             <div class="inventory-tabs">
                 <button class="tab-btn active" data-tab="manhTuong">Mảnh Tướng</button>
-                <button class="tab-btn" data-tab="vatPham">Giảm Thời Gian</button>
+                <button class="tab-btn" data-tab="vatPham">Vật Phẩm</button>
                 <button class="tab-btn" data-tab="tuong">Tướng</button>
             </div>
             
@@ -144,13 +181,26 @@
                 <div id="tabVatPham" class="tab-pane">
                     <div id="vatPham" class="items-grid"></div>
                     <div class="use-section">
-                        <h3>Sử Dụng Vật Phẩm</h3>
+                        <h3>⏰ Sử Dụng Vật Phẩm Giảm Thời Gian</h3>
                         <div id="suDungVatPham" class="use-buttons"></div>
                     </div>
                 </div>
                 <div id="tabTuong" class="tab-pane">
                     <div id="tuong" class="items-grid"></div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Popup Kết Quả Chiến Đấu -->
+    <div id="combatResultPopup" class="popup-overlay">
+        <div class="popup-content">
+            <div class="popup-header">
+                <h2>⚔️ Kết Quả Chiến Đấu</h2>
+                <button id="btnCloseCombatResult" class="close-btn">✕</button>
+            </div>
+            <div id="combatResultContent" class="combat-result-content">
+                <!-- Nội dung kết quả chiến đấu sẽ được thêm bằng JavaScript -->
             </div>
         </div>
     </div>
