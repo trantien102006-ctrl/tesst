@@ -3,49 +3,52 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>RoK Simulator Web by Grok</title>
+  <title>RO TURN-BASE - Game Chiến Lượt Lượt</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <div class="container">
-    <h1>Rise of Kingdoms Simulator</h1>
-    <div class="tabs">
-      <button class="tab-btn active" onclick="openTab('battle')">Chiến Đấu</button>
-      <button class="tab-btn" onclick="openTab('train')">Rèn Lính</button>
-      <button class="tab-btn" onclick="openTab('chest')">Mở Rương</button>
-      <button class="tab-btn" onclick="openTab('stats')">Tài Nguyên</button>
+    <h1>RO TURN-BASE</h1>
+    <p class="subtitle">Game chiến đấu lượt - Rèn quân - Mở rương - Đấu trường</p>
+
+    <!-- RÈN QUÂN -->
+    <div class="section">
+      <h2>Rèn Quân (10 lính = 1 phút thật)</h2>
+      <p>Quân số hiện tại: <span id="soQuan">0</span></p>
+      <div class="btn-group">
+        <button onclick="renQuan(100)">Rèn 100 quân (10 phút)</button>
+        <button onclick="renQuan(1000)">Rèn 1.000 quân (100 phút)</button>
+        <button onclick="renQuan(5000)">Rèn 5.000 quân (500 phút)</button>
+      </div%,
+      <p>Đang rèn... <span id="timer">00:00</span></p>
     </div>
 
-    <!-- Tab Chiến Đấu -->
-    <div id="battle" class="tab-content active">
-      <h2>Chọn trận đấu</h2>
-      <select id="general1">
-        <option value="takemasa">Takemasa (Bộ binh)</option>
-        <option value="ren">Ren (Cung thủ)</option>
-        <option value="shinya">Shinya (Kỵ binh)</option>
-      </select>
-      <input type="number" id="troops1" value="15000" min="1000"/>
-      <span>vs</span>
-      <select id="general2">
-        <option value="ren">Ren (Cung thủ)</option>
-        <option value="shinya">Shinya (Kỵ binh)</option>
-        <option value="takemasa">Takemasa (Bộ binh)</option>
-      </select>
-      <input type="number" id="troops2" value="10000" min="1000"/>
-      <br><br>
-      <button onclick="startBattle()">Bắt Đầu Chiến Đấu</button>
-      <pre id="battleLog"></pre>
+    <!-- MỞ RƯƠNG -->
+    <div class="section">
+      <h2>Mở Rương Thần Bí</h2>
+      <p>Rương còn: <span id="ruong">30</span></p>
+      <div class="btn-group">
+        <button onclick="moRuong(1)">Mở 1 rương</button>
+        <button onclick="moRuong(10)">Mở 10 rương</button>
+      </div>
+      <div id="ketQuaMo" class="result"></div>
     </div>
 
-    <!-- Tab Rèn Lính, Mở Rương, Stats -->
-    <div id="train" class="tab-content"><h2>Rèn lính đang phát triển...</h2></div>
-    <div id="chest" class="tab-content"><h2>Mở rương đang phát triển...</h2></div>
-    <div id="stats" class="tab-content"><h2>Gems: <span id="gems">0</span></h2></div>
+    <!-- DANH SÁCH ANH HÙNG -->
+    <div class="section">
+      <h2>Anh Hùng Của Bạn</h2>
+      <div id="dsAnhHung"></div>
+    </div>
+
+    <div class="footer">
+      RO TURN-BASE © 2025 - Made for Đại Ca
+    </div>
   </div>
 
   <script src="script.js"></script>
 </body>
 </html>
+
 
 
 
