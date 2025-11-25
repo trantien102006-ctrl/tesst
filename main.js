@@ -21,17 +21,34 @@ let vatPham = {
 
 // Danh sách vật phẩm có thể nhận từ rương
 const bangVatPham = [
-    { ten: "Giảm 1 phút", tyLe: 50, loai: "giamtg" },
+    { ten: "Giảm 1 phút", tyLe: 40, loai: "giamtg" },
     { ten: "Giảm 5 phút", tyLe: 30, loai: "giamtg" },
     { ten: "Giảm 10 phút", tyLe: 20, loai: "giamtg" },
     { ten: "Giảm 30 phút", tyLe: 10, loai: "giamtg" },
-    { ten: "Mảnh Takemasa", tyLe: 5, loai: "manh" },
-    { ten: "Mảnh Ren", tyLe: 5, loai: "manh" },
-    { ten: "Mảnh Shinya", tyLe: 0.1, loai: "manh" }
+    { ten: "Mảnh Takemasa", tyLe: 10, loai: "manh" },
+    { ten: "Mảnh Ren", tyLe: 10, loai: "manh" },
+    { ten: "Mảnh Shinya", tyLe: 10, loai: "manh" }
 ];
 
 // Hàm khởi tạo game
 function initGame() {
+    // Gán sự kiện cho các nút
+    document.getElementById('ren100').addEventListener('click', function() {
+        renQuan(100);
+    });
+    
+    document.getElementById('ren1000').addEventListener('click', function() {
+        renQuan(1000);
+    });
+    
+    document.getElementById('mo1').addEventListener('click', function() {
+        moRuong(1);
+    });
+    
+    document.getElementById('mo10').addEventListener('click', function() {
+        moRuong(10);
+    });
+    
     capNhat();
     console.log("Game đã được khởi tạo!");
 }
@@ -43,21 +60,63 @@ function capNhat() {
     
     // Cập nhật hiển thị mảnh tướng
     document.getElementById("manhTuong").innerHTML = `
-        <div class="vatpham manhtuong">Takemasa: ${manhTuong.Takemasa}/100</div>
-        <div class="vatpham manhtuong">Ren: ${manhTuong.Ren}/100</div>
-        <div class="vatpham manhtuong">Shinya: ${manhTuong.Shinya}/100</div>
+        <div class="vatpham manhtuong">
+            <strong>Takemasa</strong><br>
+            ${manhTuong.Takemasa}/100
+        </div>
+        <div class="vatpham manhtuong">
+            <strong>Ren</strong><br>
+            ${manhTuong.Ren}/100
+        </div>
+        <div class="vatpham manhtuong">
+            <strong>Shinya</strong><br>
+            ${manhTuong.Shinya}/100
+        </div>
     `;
     
     // Cập nhật hiển thị vật phẩm
     document.getElementById("vatPham").innerHTML = `
-        <div class="vatpham giamtg">Giảm 1 phút: ${vatPham["Giảm 1 phút"]}</div>
-        <div class="vatpham giamtg">Giảm 5 phút: ${vatPham["Giảm 5 phút"]}</div>
-        <div class="vatpham giamtg">Giảm 10 phút: ${vatPham["Giảm 10 phút"]}</div>
-        <div class="vatpham giamtg">Giảm 30 phút: ${vatPham["Giảm 30 phút"]}</div>
+        <div class="vatpham giamtg">
+            <strong>Giảm 1 phút</strong><br>
+            ${vatPham["Giảm 1 phút"]}
+        </div>
+        <div class="vatpham giamtg">
+            <strong>Giảm 5 phút</strong><br>
+            ${vatPham["Giảm 5 phút"]}
+        </div>
+        <div class="vatpham giamtg">
+            <strong>Giảm 10 phút</strong><br>
+            ${vatPham["Giảm 10 phút"]}
+        </div>
+        <div class="vatpham giamtg">
+            <strong>Giảm 30 phút</strong><br>
+            ${vatPham["Giảm 30 phút"]}
+        </div>
     `;
+    
+    // Cập nhật nút sử dụng vật phẩm
+    capNhatNutSuDung();
     
     // Kiểm tra và hiển thị nút ghép tướng nếu đủ mảnh
     kiemTraGhepTuong();
+}
+
+// Cập nhật nút sử dụng vật phẩm
+function capNhatNutSuDung() {
+    const nutSuDungDiv = document.getElementById("nutSuDung");
+    let html = '';
+    
+    for (const [ten, soLuong] of Object.entries(vatPham)) {
+        if (soLuong > 0) {
+            html += `<button onclick="suDungVatPham('${ten}')">Sử dụng ${ten} (${soLuong})</button>`;
+        }
+    }
+    
+    if (html === '') {
+        html = '<p>Không có vật phẩm nào để sử dụng</p>';
+    }
+    
+    nutSuDungDiv.innerHTML = html;
 }
 
 // Hàm đếm ngược thời gian
@@ -110,7 +169,7 @@ function moRuong(so) {
     }
     
     ruong -= so;
-    let html = "";
+    let html = "<h4>Kết quả mở rương:</h4>";
     let results = [];
     
     for (let i = 0; i < so; i++) {
@@ -138,21 +197,21 @@ function moRuong(so) {
     }
     
     // Hiển thị kết quả với hiệu ứng
-    displayResultsWithAnimation(results);
+    displayResultsWithAnimation(results, html);
     capNhat();
 }
 
 // Hiển thị kết quả với hiệu ứng
-function displayResultsWithAnimation(results) {
+function displayResultsWithAnimation(results, html) {
     const ketQuaMoDiv = document.getElementById("ketQuaMo");
-    ketQuaMoDiv.innerHTML = "<h3>Kết quả mở rương:</h3>";
+    ketQuaMoDiv.innerHTML = html;
     
     let index = 0;
     const showNextResult = () => {
         if (index < results.length) {
             ketQuaMoDiv.innerHTML += results[index].html;
             index++;
-            setTimeout(showNextResult, 200);
+            setTimeout(showNextResult, 300);
         }
     };
     
@@ -187,7 +246,7 @@ function kiemTraGhepTuong() {
     if (canGhep) {
         const ghepSection = document.createElement('div');
         ghepSection.className = 'ghep-tuong-section';
-        ghepSection.innerHTML = `<h3>Ghép Tướng</h3>${ghepHTML}`;
+        ghepSection.innerHTML = `<h3>Ghép Tướng</h3><div class="button-group">${ghepHTML}</div>`;
         ketQuaMoDiv.appendChild(ghepSection);
     }
 }
@@ -227,12 +286,13 @@ function suDungVatPham(tenVatPham) {
     thoiGianCon = Math.max(0, thoiGianCon - giamGiay);
     vatPham[tenVatPham]--;
     
-    alert(`Đã sử dụng ${tenVatPham}!`);
+    alert(`Đã sử dụng ${tenVatPham}, giảm ${giamPhut} phút!`);
     capNhat();
 }
 
 // Khởi động game khi trang load xong
 document.addEventListener('DOMContentLoaded', initGame);
+
 
 
 
