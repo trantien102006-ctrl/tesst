@@ -4,227 +4,67 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Game Rèn Quân</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
-            color: white;
-            margin: 0;
-            padding: 20px;
-            min-height: 100vh;
-        }
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            background: rgba(0, 0, 0, 0.8);
-            padding: 20px;
-            border-radius: 10px;
-        }
-        h1 {
-            text-align: center;
-            color: gold;
-        }
-        .stats {
-            display: flex;
-            justify-content: space-around;
-            margin: 20px 0;
-        }
-        #timer {
-            font-size: 2em;
-            text-align: center;
-            margin: 20px 0;
-            color: red;
-        }
-        button {
-            padding: 10px 20px;
-            margin: 5px;
-            font-size: 1em;
-            background: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        button:hover {
-            background: #45a049;
-        }
-        .results {
-            margin: 20px 0;
-            padding: 10px;
-            background: rgba(255,255,255,0.1);
-            border-radius: 5px;
-            min-height: 50px;
-        }
-        .item {
-            display: inline-block;
-            margin: 5px;
-            padding: 10px;
-            background: rgba(255,255,255,0.1);
-            border-radius: 5px;
-        }
-    </style>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="container">
-        <h1>Game Rèn Quân và Mở Rương</h1>
-        
-        <div class="stats">
-            <div><h2>Số quân: <span id="soQuan">0</span></h2></div>
-            <div><h2>Rương: <span id="ruong">50</span></h2></div>
+    <div class="game-container">
+        <!-- Khu vực game chính -->
+        <div class="main-game">
+            <h1>Game Rèn Quân</h1>
+            
+            <div class="stats">
+                <div class="stat-item">
+                    <h2>Số quân: <span id="soQuan">0</span></h2>
+                </div>
+                <div class="stat-item">
+                    <h2>Rương: <span id="ruong">50</span></h2>
+                </div>
+            </div>
+            
+            <div id="timer">00:00</div>
+            
+            <div class="actions">
+                <div class="action-group">
+                    <h3>Rèn Quân</h3>
+                    <button id="btnRen100">Rèn 100 lính (10 phút)</button>
+                    <button id="btnRen1000">Rèn 1000 lính (100 phút)</button>
+                </div>
+                
+                <div class="action-group">
+                    <h3>Mở Rương</h3>
+                    <button id="btnMo1">Mở 1 rương</button>
+                    <button id="btnMo10">Mở 10 rương</button>
+                </div>
+            </div>
+            
+            <div id="ketQuaMo" class="results"></div>
         </div>
         
-        <div id="timer">00:00</div>
-        
-        <div>
-            <h3>Rèn Quân</h3>
-            <button id="btnRen100">Rèn 100 lính (10 phút)</button>
-            <button id="btnRen1000">Rèn 1000 lính (100 phút)</button>
-        </div>
-        
-        <div>
-            <h3>Mở Rương</h3>
-            <button id="btnMo1">Mở 1 rương</button>
-            <button id="btnMo10">Mở 10 rương</button>
-        </div>
-        
-        <div id="ketQuaMo" class="results"></div>
-        
-        <div>
-            <h2>Mảnh Tướng</h2>
-            <div id="manhTuong"></div>
-        </div>
-        
-        <div>
-            <h2>Vật Phẩm</h2>
-            <div id="vatPham"></div>
+        <!-- Túi đồ bên phải -->
+        <div class="inventory">
+            <h2>Túi Đồ</h2>
+            
+            <div class="inventory-section">
+                <h3>Mảnh Tướng</h3>
+                <div id="manhTuong" class="inventory-items"></div>
+            </div>
+            
+            <div class="inventory-section">
+                <h3>Giảm Thời Gian Rèn Luyện</h3>
+                <div id="vatPham" class="inventory-items"></div>
+            </div>
+            
+            <div class="inventory-section">
+                <h3>Sử Dụng Vật Phẩm</h3>
+                <div id="suDungVatPham" class="use-items"></div>
+            </div>
         </div>
     </div>
 
-    <script>
-        // Đơn giản hóa - đặt toàn bộ JS trong file HTML
-        console.log("Game đang khởi động...");
-        
-        let gameState = {
-            soQuan: 0,
-            ruong: 50,
-            dangRen: false,
-            thoiGianCon: 0,
-            timerInterval: null,
-            manhTuong: { Takemasa: 0, Ren: 0, Shinya: 0 },
-            vatPham: { "Giảm 1 phút": 0, "Giảm 5 phút": 0, "Giảm 10 phút": 0, "Giảm 30 phút": 0 }
-        };
-
-        const bangVatPham = [
-            { ten: "Giảm 1 phút", tyLe: 40, loai: "giamtg" },
-            { ten: "Giảm 5 phút", tyLe: 30, loai: "giamtg" },
-            { ten: "Giảm 10 phút", tyLe: 20, loai: "giamtg" },
-            { ten: "Giảm 30 phút", tyLe: 10, loai: "giamtg" },
-            { ten: "Mảnh Takemasa", tyLe: 10, loai: "manh" },
-            { ten: "Mảnh Ren", tyLe: 10, loai: "manh" },
-            { ten: "Mảnh Shinya", tyLe: 10, loai: "manh" }
-        ];
-
-        function initGame() {
-            console.log("Đang khởi tạo game...");
-            
-            // Gán sự kiện
-            document.getElementById('btnRen100').onclick = () => renQuan(100);
-            document.getElementById('btnRen1000').onclick = () => renQuan(1000);
-            document.getElementById('btnMo1').onclick = () => moRuong(1);
-            document.getElementById('btnMo10').onclick = () => moRuong(10);
-            
-            updateUI();
-            console.log("Game đã sẵn sàng!");
-        }
-
-        function updateUI() {
-            document.getElementById('soQuan').textContent = gameState.soQuan;
-            document.getElementById('ruong').textContent = gameState.ruong;
-            
-            // Timer
-            const minutes = String(Math.floor(gameState.thoiGianCon / 60)).padStart(2, '0');
-            const seconds = String(gameState.thoiGianCon % 60).padStart(2, '0');
-            document.getElementById('timer').textContent = `${minutes}:${seconds}`;
-            
-            // Mảnh tướng
-            const manhTuongHTML = Object.entries(gameState.manhTuong).map(([ten, sl]) => 
-                `<div class="item">${ten}: ${sl}/100</div>`
-            ).join('');
-            document.getElementById('manhTuong').innerHTML = manhTuongHTML;
-            
-            // Vật phẩm
-            const vatPhamHTML = Object.entries(gameState.vatPham).map(([ten, sl]) => 
-                `<div class="item">${ten}: ${sl}</div>`
-            ).join('');
-            document.getElementById('vatPham').innerHTML = vatPhamHTML;
-        }
-
-        function renQuan(so) {
-            if (gameState.dangRen) {
-                alert("Đang rèn quân rồi!");
-                return;
-            }
-            
-            gameState.dangRen = true;
-            gameState.thoiGianCon = (so / 10) * 60; // phút -> giây
-            
-            const timer = setInterval(() => {
-                gameState.thoiGianCon--;
-                updateUI();
-                
-                if (gameState.thoiGianCon <= 0) {
-                    clearInterval(timer);
-                    gameState.soQuan += so;
-                    gameState.dangRen = false;
-                    updateUI();
-                    alert(`Rèn thành công ${so} lính!`);
-                }
-            }, 1000);
-            
-            updateUI();
-        }
-
-        function moRuong(so) {
-            if (gameState.ruong < so) {
-                alert("Không đủ rương!");
-                return;
-            }
-            
-            gameState.ruong -= so;
-            let ketQuaHTML = `<h3>Kết quả mở ${so} rương:</h3>`;
-            
-            for (let i = 0; i < so; i++) {
-                const random = Math.random() * 100;
-                let totalRate = 0;
-                let item = bangVatPham[0];
-                
-                for (const vp of bangVatPham) {
-                    totalRate += vp.tyLe;
-                    if (random <= totalRate) {
-                        item = vp;
-                        break;
-                    }
-                }
-                
-                if (item.loai === "manh") {
-                    const tenTuong = item.ten.replace("Mảnh ", "");
-                    gameState.manhTuong[tenTuong]++;
-                    ketQuaHTML += `<div style="color: gold;">${item.ten}</div>`;
-                } else {
-                    gameState.vatPham[item.ten]++;
-                    ketQuaHTML += `<div>${item.ten}</div>`;
-                }
-            }
-            
-            document.getElementById('ketQuaMo').innerHTML = ketQuaHTML;
-            updateUI();
-        }
-
-        // Khởi động game khi trang load
-        window.onload = initGame;
-    </script>
+    <script src="script.js"></script>
 </body>
 </html>
+
 
 
 
