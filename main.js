@@ -1,35 +1,80 @@
-let player = { gems: 0 };
-if (localStorage.getItem("rok_save")) {
-  player = JSON.parse(localStorage.getItem("rok_save"));
-  document.getElementById("gems").innerText = player.gems;
+let soQuan = 0;
+let ruong = 50;
+let danhSachAnhHung = [];
+let dangRen = false;
+let thoiGianCon = 0;
+
+// Danh sách anh hùng (tỷ lệ chuẩn game turn-base)
+const bangAnhHung = [
+  { ten: "Thần Kiếm Thánh Vương", tyLe: 0.3, cap: "Legendary" },
+  { ten: "Hắc Long Đế", tyLe: 0.5, cap: "Legendary" },
+  { ten: "Tử Thần Nữ Vương", tyLe: 0.7, cap: "Legendary" },
+  { ten: "Phượng Hoàng Chiến Thần", tyLe: 1.0, cap: "Epic" },
+  { ten: "Băng Phong Ma Nữ", tyLe: 1.5, cap: "Epic" },
+  { ten: "Lôi Thần", tyLe: 2.0, cap: "Epic" },
+  { ten: "Hiệp Khách Vô Danh", tyLe: 8.0, cap: "Rare" },
+  { ten: "Chiến Binh", tyLe: 86.0, cap: "Common" }
+];
+
+function capNhat() {
+  document.getElementById("soQuan").textContent = soQuan.toLocaleString();
+  document.getElementById("ruong").textContent = ruong;
+  document.getElementById("dsAnhHung").innerHTML = danhSachAnhHung.map(h => 
+    `<div class="anhhung ${h.cap === 'Legendary' ? 'legendary' : ''}">
+      <strong>${h.ten}</strong><br><small>${h.cap}</small>
+    </div>`
+  ).join("");
 }
 
-function openTab(tabName) {
-  document.querySelectorAll(".tab-content").forEach(t => t.classList.remove("active"));
-  document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
-  document.getElementById(tabName).classList.add("active");
-  document.querySelector(`button[onclick="openTab('${tabName}')"]`).classList.add("active");
+function demNguoc() {
+  if (thoiGianCon <= 0) {
+    dangRen = false;
+    capNhat();
+    return;
+  }
+  thoiGianCon--;
+  const m = String(Math.floor(thoiGianCon / 60)).padStart(2, '0');
+  const s = String(thoiGianCon % 60).padStart(2, '0');
+  document.getElementById("timer").textContent = `${m}:${s}`;
+  setTimeout(demNguoc, 1000);
 }
 
-function startBattle() {
-  const g1 = document.getElementById("general1").value;
-  const g2 = document.getElementById("general2").value;
-  const t1 = parseInt(document.getElementById("troops1").value);
-  const t2 = parseInt(document.getElementById("troops2").value);
-  const log = document.getElementById("battleLog");
-  log.innerHTML = `<span style="color:#ffd700">Trận đấu bắt đầu: ${g1.toUpperCase()} (${t1.toLocaleString()}) vs ${g2.toUpperCase()} (${t2.toLocaleString()})</span>\n`;
-
+function renQuan(so) {
+  if (dangRen) return alert("Đang rèn quân rồi đại ca!");
+  const phut = so / 10;
+  thoiGianCon = phut * 60;
+  dangRen = true;
+  demNguoc();
   setTimeout(() => {
-    const winner = Math.random() > 0.5 ? g1 : g2;
-    const reward = Math.floor(Math.random() * 3000) + 500;
-    player.gems += reward;
-    localStorage.setItem("rok_save", JSON.stringify(player));
-    document.getElementById("gems").innerText = player.gems;
-
-    log.innerHTML += `>>> ${winner.toUpperCase()} thắng!\n`;
-    log.innerHTML += `Bạn nhận được ${reward} gems!\n`;
-    log.innerHTML += "Trận đấu kết thúc.\n";
-    log.scrollTop = log.scrollHeight;
-  }, 2000);
+    soQuan += so;
+    dangRen = false;
+    document.getElementById("timer").textContent = "00:00";
+    capNhat();
+  }, thoiGianCon * 1000);
 }
+
+function moRuong(so) {
+  if (ruong < so) return alert("Hết rương rồi đại ca ơi!");
+  ruong -= so;
+  let html = "";
+  for (let i = 0; i < so; i++) {
+    const rand = Math.random() * 100;
+    let tong = 0;
+    let ra = bangAnhHung[bangAnhHung.length - 1]; // default
+    for (const ah of bangAnhHung) {
+      tong += ah.tyLe;
+      if (rand <= tong) { ra = ah; break; }
+    }
+    danhSachAnhHung.push(ra);
+    if (ra.cap === "Legendary") {
+      html += `<div style="color:#ff00ff; font-size:2em; animation: pulse 1s infinite;">✦ ${ra.ten} ✦</div>`;
+    }
+  }
+  document.getElementById("ketQuaMo").innerHTML = html || "<div>Chỉ ra anh hùng thường...</div>";
+  capNhat();
+}
+
+// Khởi động
+capNhat();
+
 
