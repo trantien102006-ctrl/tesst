@@ -7,6 +7,7 @@ let gameState = {
     timerInterval: null,
     startTime: null,
     endTime: null,
+    soQuanDangRen: 0,
     
     manhTuong: {
         Takemasa: 0,
@@ -40,7 +41,6 @@ function saveGame() {
         timerInterval: null // Không lưu interval
     };
     localStorage.setItem('gameRenQuan', JSON.stringify(saveData));
-    console.log("Game đã được lưu!");
 }
 
 // Tải game state từ localStorage
@@ -62,14 +62,15 @@ function loadGame() {
                 startTimer();
                 console.log("Tiếp tục rèn quân...");
             } else {
-                // Quá trình rèn quân đã kết thúc
-                const soQuanRen = loadedState.soQuanRen || 0;
+                // Quá trình rèn quân đã kết thúc - SỬA LỖI QUAN TRỌNG
+                const soQuanDangRen = loadedState.soQuanDangRen || 0;
                 gameState = { ...loadedState };
-                gameState.soQuan += soQuanRen;
+                gameState.soQuan += soQuanDangRen; // CỘNG LÍNH VÀO ĐÂY
                 gameState.dangRen = false;
                 gameState.thoiGianCon = 0;
                 gameState.startTime = null;
                 gameState.endTime = null;
+                gameState.soQuanDangRen = 0;
                 console.log("Rèn quân hoàn thành!");
             }
         } else {
@@ -93,17 +94,55 @@ function initGame() {
         console.log("Không tìm thấy dữ liệu đã lưu, bắt đầu game mới");
     }
     
-    // Gán sự kiện cho các nút
+    // Gán sự kiện cho các nút chính
     document.getElementById('btnRen100').addEventListener('click', () => renQuan(100));
     document.getElementById('btnRen1000').addEventListener('click', () => renQuan(1000));
     document.getElementById('btnMo1').addEventListener('click', () => moRuong(1));
     document.getElementById('btnMo10').addEventListener('click', () => moRuong(10));
     
+    // Sự kiện cho túi đồ
+    document.getElementById('btnInventory').addEventListener('click', openInventory);
+    document.getElementById('btnCloseInventory').addEventListener('click', closeInventory);
+    
+    // Sự kiện cho tabs
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const tabName = e.target.getAttribute('data-tab');
+            switchTab(tabName);
+        });
+    });
+    
     updateUI();
     console.log("✅ Game đã sẵn sàng!");
 }
 
-// Cập nhật giao diện
+// Mở túi đồ
+function openInventory() {
+    document.getElementById('inventoryPopup').classList.add('active');
+    updateInventoryUI();
+}
+
+// Đóng túi đồ
+function closeInventory() {
+    document.getElementById('inventoryPopup').classList.remove('active');
+}
+
+// Chuyển tab
+function switchTab(tabName) {
+    // Ẩn tất cả tab
+    document.querySelectorAll('.tab-pane').forEach(tab => {
+        tab.classList.remove('active');
+    });
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    
+    // Hiện tab được chọn
+    document.getElementById(`tab${tabName.charAt(0).toUpperCase() + tabName.slice(1)}`).classList.add('active');
+    document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
+}
+
+// Cập nhật giao diện chính
 function updateUI() {
     // Cập nhật thống kê cơ bản
     document.getElementById('soQuan').textContent = gameState.soQuan.toLocaleString();
@@ -114,7 +153,16 @@ function updateUI() {
     const seconds = String(gameState.thoiGianCon % 60).padStart(2, '0');
     document.getElementById('timer').textContent = `${minutes}:${seconds}`;
     
-    // Cập nhật mảnh tướng trong túi đồ
+    // Kiểm tra điều kiện ghép tướng
+    checkGeneralCombination();
+    
+    // Lưu game
+    saveGame();
+}
+
+// Cập nhật giao diện túi đồ
+function updateInventoryUI() {
+    // Cập nhật mảnh tướng
     const manhTuongContainer = document.getElementById('manhTuong');
     manhTuongContainer.innerHTML = '';
     
@@ -128,7 +176,7 @@ function updateUI() {
         manhTuongContainer.appendChild(itemDiv);
     });
     
-    // Cập nhật vật phẩm trong túi đồ
+    // Cập nhật vật phẩm
     const vatPhamContainer = document.getElementById('vatPham');
     vatPhamContainer.innerHTML = '';
     
@@ -144,12 +192,6 @@ function updateUI() {
     
     // Cập nhật nút sử dụng vật phẩm
     updateUseItems();
-    
-    // Kiểm tra điều kiện ghép tướng
-    checkGeneralCombination();
-    
-    // Lưu game
-    saveGame();
 }
 
 // Cập nhật nút sử dụng vật phẩm
@@ -162,7 +204,7 @@ function updateUseItems() {
         Object.entries(gameState.vatPham).forEach(([ten, soLuong]) => {
             if (soLuong > 0) {
                 const useButton = document.createElement('button');
-                useButton.className = 'use-button';
+                useButton.className = 'use-btn';
                 useButton.textContent = `Sử dụng ${ten} (${soLuong})`;
                 useButton.addEventListener('click', () => suDungVatPham(ten));
                 useContainer.appendChild(useButton);
@@ -170,10 +212,10 @@ function updateUseItems() {
         });
         
         if (useContainer.children.length === 0) {
-            useContainer.innerHTML = '<p>Không có vật phẩm để sử dụng</p>';
+            useContainer.innerHTML = '<p style="text-align: center; color: #ccc;">Không có vật phẩm để sử dụng</p>';
         }
     } else {
-        useContainer.innerHTML = '<p>Không có quân đang rèn</p>';
+        useContainer.innerHTML = '<p style="text-align: center; color: #ccc;">Không có quân đang rèn</p>';
     }
 }
 
@@ -186,10 +228,15 @@ function startTimer() {
     gameState.timerInterval = setInterval(() => {
         if (gameState.thoiGianCon <= 0) {
             clearInterval(gameState.timerInterval);
+            // QUAN TRỌNG: Cộng lính khi hết thời gian
+            gameState.soQuan += gameState.soQuanDangRen;
             gameState.dangRen = false;
+            gameState.thoiGianCon = 0;
             gameState.startTime = null;
             gameState.endTime = null;
+            gameState.soQuanDangRen = 0;
             updateUI();
+            alert(`🎉 Rèn thành công ${gameState.soQuanDangRen.toLocaleString()} lính!`);
             return;
         }
         gameState.thoiGianCon--;
@@ -197,7 +244,7 @@ function startTimer() {
     }, 1000);
 }
 
-// Rèn quân
+// Rèn quân - ĐÃ SỬA LỖI
 function renQuan(so) {
     if (gameState.dangRen) {
         alert("Đang rèn quân rồi đại ca!");
@@ -209,21 +256,9 @@ function renQuan(so) {
     gameState.dangRen = true;
     gameState.startTime = Date.now();
     gameState.endTime = gameState.startTime + (gameState.thoiGianCon * 1000);
-    gameState.soQuanRen = so; // Lưu số quân đang rèn
+    gameState.soQuanDangRen = so; // Lưu số quân đang rèn
     
     startTimer();
-    
-    setTimeout(() => {
-        gameState.soQuan += so;
-        gameState.dangRen = false;
-        gameState.thoiGianCon = 0;
-        gameState.startTime = null;
-        gameState.endTime = null;
-        clearInterval(gameState.timerInterval);
-        updateUI();
-        alert(`🎉 Rèn thành công ${so.toLocaleString()} lính!`);
-    }, gameState.thoiGianCon * 1000);
-    
     updateUI();
 }
 
@@ -236,7 +271,7 @@ function moRuong(so) {
     
     gameState.ruong -= so;
     const resultsContainer = document.getElementById('ketQuaMo');
-    resultsContainer.innerHTML = `<h3>🎁 Kết quả mở ${so} rương:</h3>`;
+    resultsContainer.innerHTML = `<h3 style="color: #ffd700; text-align: center; margin-bottom: 15px;">🎁 Kết quả mở ${so} rương:</h3>`;
     
     const results = [];
     
@@ -308,15 +343,15 @@ function checkGeneralCombination() {
     let canCombine = false;
     
     if (gameState.manhTuong.Takemasa >= 100) {
-        combineHTML += `<button onclick="combineGeneral('Takemasa')">⚔️ Ghép Tướng Takemasa</button>`;
+        combineHTML += `<button class="use-btn" onclick="combineGeneral('Takemasa')">⚔️ Ghép Tướng Takemasa</button>`;
         canCombine = true;
     }
     if (gameState.manhTuong.Ren >= 100) {
-        combineHTML += `<button onclick="combineGeneral('Ren')">⚔️ Ghép Tướng Ren</button>`;
+        combineHTML += `<button class="use-btn" onclick="combineGeneral('Ren')">⚔️ Ghép Tướng Ren</button>`;
         canCombine = true;
     }
     if (gameState.manhTuong.Shinya >= 100) {
-        combineHTML += `<button onclick="combineGeneral('Shinya')">⚔️ Ghép Tướng Shinya</button>`;
+        combineHTML += `<button class="use-btn" onclick="combineGeneral('Shinya')">⚔️ Ghép Tướng Shinya</button>`;
         canCombine = true;
     }
     
@@ -325,7 +360,7 @@ function checkGeneralCombination() {
         combineSection.className = 'combine-section';
         combineSection.innerHTML = `
             <h3>🌟 Ghép Tướng 🌟</h3>
-            <div class="use-items">${combineHTML}</div>
+            <div class="use-buttons">${combineHTML}</div>
         `;
         resultsContainer.appendChild(combineSection);
     }
@@ -337,6 +372,7 @@ function combineGeneral(generalName) {
         gameState.manhTuong[generalName] -= 100;
         alert(`🎉 Chúc mừng! Bạn đã ghép thành công tướng ${generalName}!`);
         updateUI();
+        updateInventoryUI();
     } else {
         alert(`❌ Không đủ mảnh để ghép tướng ${generalName}!`);
     }
@@ -373,6 +409,7 @@ function suDungVatPham(tenVatPham) {
     
     alert(`Đã sử dụng ${tenVatPham}, giảm ${giamGiay/60} phút!`);
     updateUI();
+    updateInventoryUI();
 }
 
 // Khởi động game khi trang load
