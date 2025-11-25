@@ -21,13 +21,13 @@ let vatPham = {
 
 // Danh sách vật phẩm có thể nhận từ rương
 const bangVatPham = [
-    { ten: "Giảm 1 phút", tyLe: 40, loai: "giamtg" },
+    { ten: "Giảm 1 phút", tyLe: 50, loai: "giamtg" },
     { ten: "Giảm 5 phút", tyLe: 30, loai: "giamtg" },
     { ten: "Giảm 10 phút", tyLe: 20, loai: "giamtg" },
     { ten: "Giảm 30 phút", tyLe: 10, loai: "giamtg" },
-    { ten: "Mảnh Takemasa", tyLe: 10, loai: "manh" },
-    { ten: "Mảnh Ren", tyLe: 10, loai: "manh" },
-    { ten: "Mảnh Shinya", tyLe: 10, loai: "manh" }
+    { ten: "Mảnh Takemasa", tyLe: 5, loai: "manh" },
+    { ten: "Mảnh Ren", tyLe: 5, loai: "manh" },
+    { ten: "Mảnh Shinya", tyLe: 0.1, loai: "manh" }
 ];
 
 // Hàm khởi tạo game
@@ -233,6 +233,7 @@ function suDungVatPham(tenVatPham) {
 
 // Khởi động game khi trang load xong
 document.addEventListener('DOMContentLoaded', initGame);
+
 
 
 
