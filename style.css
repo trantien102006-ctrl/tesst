@@ -13,74 +13,79 @@ body {
 }
 
 .game-container {
-    display: flex;
-    max-width: 1400px;
+    max-width: 800px;
     margin: 0 auto;
-    gap: 20px;
-}
-
-.main-game {
-    flex: 3;
     background: rgba(0, 0, 0, 0.7);
     border-radius: 15px;
-    padding: 25px;
+    padding: 20px;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
     backdrop-filter: blur(10px);
 }
 
-.inventory {
-    flex: 1;
-    background: rgba(0, 0, 0, 0.7);
-    border-radius: 15px;
-    padding: 25px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-    backdrop-filter: blur(10px);
-    max-height: 800px;
-    overflow-y: auto;
+/* Header */
+.game-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid rgba(255, 215, 0, 0.3);
 }
 
 h1 {
-    text-align: center;
+    color: #ffd700;
+    font-size: 2.2em;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+}
+
+.inventory-btn {
+    padding: 12px 20px;
+    background: linear-gradient(135deg, #ff9800, #f57c00);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 1.1em;
+    transition: all 0.3s ease;
+}
+
+.inventory-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+/* Thống kê */
+.main-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
     margin-bottom: 25px;
-    color: #ffd700;
-    font-size: 2.8em;
-    text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.8);
 }
 
-h2 {
-    color: #ffd700;
-    margin-bottom: 20px;
-    text-align: center;
-    font-size: 1.8em;
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
-    border-bottom: 2px solid rgba(255, 215, 0, 0.5);
-    padding-bottom: 10px;
-}
-
-h3 {
-    color: #ffd700;
-    margin-bottom: 15px;
-    font-size: 1.3em;
-}
-
-.stats {
-    display: flex;
-    justify-content: space-around;
-    margin-bottom: 25px;
+.stat-card {
     background: rgba(255, 255, 255, 0.1);
     padding: 20px;
-    border-radius: 10px;
-    border: 2px solid rgba(255, 215, 0, 0.3);
+    border-radius: 12px;
+    text-align: center;
+    border: 2px solid rgba(255, 255, 255, 0.2);
 }
 
-.stat-item h2 {
+.stat-card h3 {
+    color: #ffd700;
+    margin-bottom: 10px;
+    font-size: 1.2em;
+}
+
+.stat-value {
+    font-size: 2.5em;
+    font-weight: bold;
     color: #4CAF50;
-    font-size: 1.6em;
-    border: none;
 }
 
-#timer {
-    font-size: 4em;
+/* Timer */
+.timer {
+    font-size: 3.5em;
     text-align: center;
     margin: 25px 0;
     color: #ff4444;
@@ -88,85 +93,178 @@ h3 {
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
     background: rgba(0, 0, 0, 0.5);
     padding: 20px;
-    border-radius: 10px;
+    border-radius: 12px;
     border: 3px solid #ff4444;
 }
 
-.actions {
+/* Nút hành động */
+.action-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 25px;
-    margin-bottom: 30px;
+    gap: 20px;
+    margin-bottom: 25px;
 }
 
-.action-group {
+.action-column {
     background: rgba(255, 255, 255, 0.1);
-    padding: 25px;
+    padding: 20px;
     border-radius: 12px;
     text-align: center;
     border: 2px solid rgba(255, 255, 255, 0.2);
 }
 
-button {
+.action-column h3 {
+    color: #ffd700;
+    margin-bottom: 15px;
+    font-size: 1.3em;
+}
+
+.action-btn {
     display: block;
     width: 100%;
-    padding: 18px;
-    margin: 12px 0;
-    font-size: 1.2em;
+    padding: 15px;
+    margin: 10px 0;
+    font-size: 1.1em;
     background: linear-gradient(135deg, #4CAF50, #45a049);
     color: white;
     border: none;
-    border-radius: 10px;
+    border-radius: 8px;
     cursor: pointer;
     transition: all 0.3s ease;
     font-weight: bold;
-    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
 }
 
-button:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+.action-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
     background: linear-gradient(135deg, #45a049, #4CAF50);
 }
 
-button:active {
-    transform: translateY(2px);
+.action-btn:active {
+    transform: translateY(1px);
 }
 
-button:disabled {
+.action-btn:disabled {
     background: #666;
     cursor: not-allowed;
     transform: none;
     box-shadow: none;
 }
 
-.results {
-    background: rgba(255, 255, 255, 0.1);
-    padding: 25px;
-    border-radius: 12px;
-    margin-bottom: 25px;
-    min-height: 120px;
-    border: 2px solid rgba(255, 255, 255, 0.2);
+.action-btn small {
+    font-size: 0.9em;
+    opacity: 0.9;
 }
 
-.inventory-section {
+/* Kết quả */
+.results-container {
     background: rgba(255, 255, 255, 0.1);
     padding: 20px;
     border-radius: 12px;
-    margin-bottom: 20px;
+    min-height: 100px;
     border: 2px solid rgba(255, 255, 255, 0.2);
 }
 
-.inventory-items {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 15px;
+/* Popup Túi Đồ */
+.popup-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
 }
 
-.use-items {
+.popup-overlay.active {
+    display: flex;
+}
+
+.popup-content {
+    background: linear-gradient(135deg, #1a2a6c, #2a5298);
+    width: 90%;
+    max-width: 600px;
+    max-height: 80vh;
+    border-radius: 15px;
+    padding: 25px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+    overflow-y: auto;
+}
+
+.popup-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid rgba(255, 215, 0, 0.3);
+}
+
+.popup-header h2 {
+    color: #ffd700;
+    font-size: 1.8em;
+}
+
+.close-btn {
+    background: #ff4444;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    font-size: 1.2em;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.close-btn:hover {
+    background: #cc0000;
+    transform: scale(1.1);
+}
+
+/* Tabs */
+.inventory-tabs {
+    display: flex;
+    margin-bottom: 20px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 5px;
+}
+
+.tab-btn {
+    flex: 1;
+    padding: 12px;
+    background: transparent;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: all 0.3s ease;
+}
+
+.tab-btn.active {
+    background: rgba(255, 215, 0, 0.3);
+    color: #ffd700;
+}
+
+.tab-pane {
+    display: none;
+}
+
+.tab-pane.active {
+    display: block;
+}
+
+/* Items Grid */
+.items-grid {
     display: grid;
-    grid-template-columns: 1fr;
-    gap: 10px;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 15px;
+    margin-bottom: 20px;
 }
 
 .inventory-item {
@@ -179,25 +277,25 @@ button:disabled {
 }
 
 .inventory-item:hover {
-    transform: scale(1.03);
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+    transform: scale(1.05);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
 }
 
 .manh-tuong {
-    border-left: 6px solid #4CAF50;
+    border-left: 5px solid #4CAF50;
     background: linear-gradient(135deg, rgba(76, 175, 80, 0.3), rgba(76, 175, 80, 0.1));
 }
 
 .vat-pham {
-    border-left: 6px solid #2196F3;
+    border-left: 5px solid #2196F3;
     background: linear-gradient(135deg, rgba(33, 150, 243, 0.3), rgba(33, 150, 243, 0.1));
 }
 
 .item-name {
     font-weight: bold;
-    font-size: 1.1em;
     margin-bottom: 8px;
     color: #ffd700;
+    font-size: 1.1em;
 }
 
 .item-count {
@@ -205,33 +303,57 @@ button:disabled {
     font-weight: bold;
 }
 
-.use-button {
+/* Sử dụng vật phẩm */
+.use-section {
+    margin-top: 25px;
+    padding: 20px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    border: 2px solid rgba(255, 215, 0, 0.3);
+}
+
+.use-section h3 {
+    color: #ffd700;
+    margin-bottom: 15px;
+    text-align: center;
+    font-size: 1.3em;
+}
+
+.use-buttons {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+}
+
+.use-btn {
     padding: 12px;
-    font-size: 1em;
     background: linear-gradient(135deg, #ff9800, #f57c00);
-}
-
-.use-button:hover {
-    background: linear-gradient(135deg, #f57c00, #ff9800);
-}
-
-@keyframes pulse {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.1); }
-    100% { transform: scale(1); }
-}
-
-.pulse {
-    animation: pulse 0.6s ease-in-out;
-}
-
-.result-item {
-    padding: 12px;
-    margin: 8px 0;
+    color: white;
+    border: none;
     border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: all 0.3s ease;
+}
+
+.use-btn:hover {
+    background: linear-gradient(135deg, #f57c00, #ff9800);
+    transform: translateY(-2px);
+}
+
+.use-btn:disabled {
+    background: #666;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* Kết quả mở rương */
+.result-item {
+    padding: 10px;
+    margin: 8px 0;
+    border-radius: 6px;
     background: rgba(255, 255, 255, 0.1);
     text-align: center;
-    font-size: 1.1em;
 }
 
 .rare {
@@ -247,29 +369,54 @@ button:disabled {
 }
 
 .combine-section {
-    margin-top: 25px;
-    padding: 20px;
-    border: 3px dashed #4CAF50;
+    margin-top: 20px;
+    padding: 15px;
+    border: 2px dashed #4CAF50;
     border-radius: 12px;
     background: rgba(76, 175, 80, 0.1);
 }
 
 .combine-section h3 {
     color: #4CAF50;
-    margin-bottom: 15px;
+    margin-bottom: 10px;
     text-align: center;
-    font-size: 1.4em;
 }
 
-@media (max-width: 1000px) {
+/* Animation */
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+.pulse {
+    animation: pulse 0.6s ease-in-out;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
     .game-container {
-        flex-direction: column;
+        padding: 15px;
     }
     
-    .inventory {
-        max-height: none;
+    .action-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .main-stats {
+        grid-template-columns: 1fr;
+    }
+    
+    .timer {
+        font-size: 2.5em;
+    }
+    
+    .popup-content {
+        width: 95%;
+        padding: 15px;
     }
 }
+
 
 
 
