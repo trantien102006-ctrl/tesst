@@ -1,206 +1,254 @@
-* {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
+// Game state
+const gameState = {
+    soQuan: 0,
+    ruong: 50,
+    dangRen: false,
+    thoiGianCon: 0,
+    timerInterval: null,
+    
+    manhTuong: {
+        Takemasa: 0,
+        Ren: 0,
+        Shinya: 0
+    },
+    
+    vatPham: {
+        "Giảm 1 phút": 0,
+        "Giảm 5 phút": 0,
+        "Giảm 10 phút": 0,
+        "Giảm 30 phút": 0
+    }
+};
+
+// Item drop rates
+const bangVatPham = [
+    { ten: "Giảm 1 phút", tyLe: 40, loai: "giamtg" },
+    { ten: "Giảm 5 phút", tyLe: 30, loai: "giamtg" },
+    { ten: "Giảm 10 phút", tyLe: 20, loai: "giamtg" },
+    { ten: "Giảm 30 phút", tyLe: 10, loai: "giamtg" },
+    { ten: "Mảnh Takemasa", tyLe: 10, loai: "manh" },
+    { ten: "Mảnh Ren", tyLe: 10, loai: "manh" },
+    { ten: "Mảnh Shinya", tyLe: 10, loai: "manh" }
+];
+
+// Initialize game
+function initGame() {
+    console.log("Initializing game...");
+    
+    // Add event listeners to buttons
+    document.getElementById('btnRen100').addEventListener('click', () => renQuan(100));
+    document.getElementById('btnRen1000').addEventListener('click', () => renQuan(1000));
+    document.getElementById('btnMo1').addEventListener('click', () => moRuong(1));
+    document.getElementById('btnMo10').addEventListener('click', () => moRuong(10));
+    
+    updateUI();
+    console.log("Game initialized successfully!");
 }
 
-body {
-    font-family: 'Arial', sans-serif;
-    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
-    color: white;
-    padding: 20px;
-    min-height: 100vh;
+// Update UI
+function updateUI() {
+    // Update basic stats
+    document.getElementById('soQuan').textContent = gameState.soQuan.toLocaleString();
+    document.getElementById('ruong').textContent = gameState.ruong;
+    
+    // Update timer
+    const minutes = String(Math.floor(gameState.thoiGianCon / 60)).padStart(2, '0');
+    const seconds = String(gameState.thoiGianCon % 60).padStart(2, '0');
+    document.getElementById('timer').textContent = `${minutes}:${seconds}`;
+    
+    // Update manh tuong
+    const manhTuongContainer = document.getElementById('manhTuong');
+    manhTuongContainer.innerHTML = '';
+    
+    Object.entries(gameState.manhTuong).forEach(([ten, soLuong]) => {
+        const itemDiv = document.createElement('div');
+        itemDiv.className = 'item manh-tuong';
+        itemDiv.innerHTML = `
+            <div class="item-name">${ten}</div>
+            <div class="item-count">${soLuong}/100</div>
+        `;
+        manhTuongContainer.appendChild(itemDiv);
+    });
+    
+    // Update vat pham
+    const vatPhamContainer = document.getElementById('vatPham');
+    vatPhamContainer.innerHTML = '';
+    
+    Object.entries(gameState.vatPham).forEach(([ten, soLuong]) => {
+        const itemDiv = document.createElement('div');
+        itemDiv.className = 'item vat-pham';
+        itemDiv.innerHTML = `
+            <div class="item-name">${ten}</div>
+            <div class="item-count">${soLuong}</div>
+        `;
+        vatPhamContainer.appendChild(itemDiv);
+    });
+    
+    // Check for general combination
+    checkGeneralCombination();
 }
 
-.container {
-    max-width: 800px;
-    margin: 0 auto;
-    background: rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(10px);
-    border-radius: 15px;
-    padding: 25px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-    border: 1px solid rgba(255, 255, 255, 0.2);
+// Train troops
+function renQuan(so) {
+    if (gameState.dangRen) {
+        alert("Đang rèn quân rồi đại ca!");
+        return;
+    }
+    
+    const phut = so / 10;
+    gameState.thoiGianCon = phut * 60;
+    gameState.dangRen = true;
+    
+    startTimer();
+    
+    setTimeout(() => {
+        gameState.soQuan += so;
+        gameState.dangRen = false;
+        gameState.thoiGianCon = 0;
+        clearInterval(gameState.timerInterval);
+        updateUI();
+        alert(`Rèn thành công ${so.toLocaleString()} lính!`);
+    }, gameState.thoiGianCon * 1000);
+    
+    updateUI();
 }
 
-h1 {
-    text-align: center;
-    margin-bottom: 30px;
-    font-size: 2.5em;
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
-    color: #ffd700;
+// Start countdown timer
+function startTimer() {
+    if (gameState.timerInterval) {
+        clearInterval(gameState.timerInterval);
+    }
+    
+    gameState.timerInterval = setInterval(() => {
+        if (gameState.thoiGianCon <= 0) {
+            clearInterval(gameState.timerInterval);
+            gameState.dangRen = false;
+            updateUI();
+            return;
+        }
+        gameState.thoiGianCon--;
+        updateUI();
+    }, 1000);
 }
 
-.stats {
-    display: flex;
-    justify-content: space-around;
-    margin-bottom: 20px;
-    background: rgba(0, 0, 0, 0.3);
-    padding: 15px;
-    border-radius: 10px;
+// Open chests
+function moRuong(so) {
+    if (gameState.ruong < so) {
+        alert("Hết rương rồi đại ca ơi!");
+        return;
+    }
+    
+    gameState.ruong -= so;
+    const resultsContainer = document.getElementById('ketQuaMo');
+    resultsContainer.innerHTML = `<h3>Kết quả mở ${so} rương:</h3>`;
+    
+    const results = [];
+    
+    for (let i = 0; i < so; i++) {
+        const rand = Math.random() * 100;
+        let cumulativeRate = 0;
+        let selectedItem = bangVatPham[0];
+        
+        for (const item of bangVatPham) {
+            cumulativeRate += item.tyLe;
+            if (rand <= cumulativeRate) {
+                selectedItem = item;
+                break;
+            }
+        }
+        
+        // Process the result
+        if (selectedItem.loai === "manh") {
+            const generalName = selectedItem.ten.replace("Mảnh ", "");
+            gameState.manhTuong[generalName]++;
+            results.push({
+                text: `✦ ${selectedItem.ten} ✦`,
+                isRare: true
+            });
+        } else {
+            gameState.vatPham[selectedItem.ten]++;
+            results.push({
+                text: selectedItem.ten,
+                isRare: false
+            });
+        }
+    }
+    
+    // Display results with animation
+    displayResults(results);
+    updateUI();
 }
 
-.stat-item h2 {
-    color: #4CAF50;
-    font-size: 1.4em;
+// Display results with animation
+function displayResults(results) {
+    const resultsContainer = document.getElementById('ketQuaMo');
+    let index = 0;
+    
+    function showNextResult() {
+        if (index < results.length) {
+            const resultDiv = document.createElement('div');
+            resultDiv.className = `result-item ${results[index].isRare ? 'rare pulse' : 'common'}`;
+            resultDiv.textContent = results[index].text;
+            resultsContainer.appendChild(resultDiv);
+            
+            index++;
+            setTimeout(showNextResult, 300);
+        }
+    }
+    
+    showNextResult();
 }
 
-#timer {
-    font-size: 3em;
-    text-align: center;
-    margin: 20px 0;
-    color: #ff4444;
-    font-weight: bold;
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
-    background: rgba(0, 0, 0, 0.3);
-    padding: 10px;
-    border-radius: 10px;
+// Check if player can combine generals
+function checkGeneralCombination() {
+    const resultsContainer = document.getElementById('ketQuaMo');
+    let combineSection = document.querySelector('.combine-section');
+    
+    if (combineSection) {
+        combineSection.remove();
+    }
+    
+    let combineHTML = '';
+    let canCombine = false;
+    
+    if (gameState.manhTuong.Takemasa >= 100) {
+        combineHTML += `<button onclick="combineGeneral('Takemasa')">Ghép Tướng Takemasa</button>`;
+        canCombine = true;
+    }
+    if (gameState.manhTuong.Ren >= 100) {
+        combineHTML += `<button onclick="combineGeneral('Ren')">Ghép Tướng Ren</button>`;
+        canCombine = true;
+    }
+    if (gameState.manhTuong.Shinya >= 100) {
+        combineHTML += `<button onclick="combineGeneral('Shinya')">Ghép Tướng Shinya</button>`;
+        canCombine = true;
+    }
+    
+    if (canCombine) {
+        combineSection = document.createElement('div');
+        combineSection.className = 'combine-section';
+        combineSection.innerHTML = `
+            <h3>Ghép Tướng</h3>
+            <div class="action-group">${combineHTML}</div>
+        `;
+        resultsContainer.appendChild(combineSection);
+    }
 }
 
-.actions {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 20px;
-    margin-bottom: 30px;
+// Combine general pieces into a general
+function combineGeneral(generalName) {
+    if (gameState.manhTuong[generalName] >= 100) {
+        gameState.manhTuong[generalName] -= 100;
+        alert(`Chúc mừng! Bạn đã ghép thành công tướng ${generalName}!`);
+        updateUI();
+    } else {
+        alert(`Không đủ mảnh để ghép tướng ${generalName}!`);
+    }
 }
 
-.action-group {
-    background: rgba(255, 255, 255, 0.1);
-    padding: 20px;
-    border-radius: 10px;
-    text-align: center;
-}
+// Initialize game when page loads
+document.addEventListener('DOMContentLoaded', initGame);
 
-.action-group h3 {
-    margin-bottom: 15px;
-    color: #ffd700;
-    font-size: 1.3em;
-}
-
-button {
-    display: block;
-    width: 100%;
-    padding: 15px;
-    margin: 10px 0;
-    font-size: 1.1em;
-    background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
-    color: white;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    font-weight: bold;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-}
-
-button:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
-    background: linear-gradient(135deg, #45a049 0%, #4CAF50 100%);
-}
-
-button:active {
-    transform: translateY(1px);
-}
-
-button:disabled {
-    background: #666;
-    cursor: not-allowed;
-    transform: none;
-    box-shadow: none;
-}
-
-.results {
-    background: rgba(255, 255, 255, 0.1);
-    padding: 20px;
-    border-radius: 10px;
-    margin-bottom: 20px;
-    min-height: 100px;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-.items-section {
-    background: rgba(255, 255, 255, 0.1);
-    padding: 20px;
-    border-radius: 10px;
-    margin-bottom: 20px;
-}
-
-.items-section h2 {
-    color: #ffd700;
-    margin-bottom: 15px;
-    text-align: center;
-    font-size: 1.5em;
-}
-
-.items-container {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 15px;
-}
-
-.item {
-    background: rgba(255, 255, 255, 0.15);
-    padding: 15px;
-    border-radius: 8px;
-    text-align: center;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    transition: transform 0.3s ease;
-}
-
-.item:hover {
-    transform: scale(1.05);
-}
-
-.manh-tuong {
-    border-left: 5px solid #4CAF50;
-    background: linear-gradient(135deg, rgba(76, 175, 80, 0.2) 0%, rgba(76, 175, 80, 0.1) 100%);
-}
-
-.vat-pham {
-    border-left: 5px solid #2196F3;
-    background: linear-gradient(135deg, rgba(33, 150, 243, 0.2) 0%, rgba(33, 150, 243, 0.1) 100%);
-}
-
-.item-name {
-    font-weight: bold;
-    font-size: 1.1em;
-    margin-bottom: 5px;
-    color: #ffd700;
-}
-
-.item-count {
-    font-size: 1.3em;
-    font-weight: bold;
-}
-
-@keyframes pulse {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.1); }
-    100% { transform: scale(1); }
-}
-
-.pulse {
-    animation: pulse 0.5s ease-in-out;
-}
-
-.result-item {
-    padding: 10px;
-    margin: 5px 0;
-    border-radius: 5px;
-    background: rgba(255, 255, 255, 0.1);
-    text-align: center;
-}
-
-.rare {
-    background: linear-gradient(135deg, rgba(255, 215, 0, 0.3) 0%, rgba(255, 165, 0, 0.3) 100%);
-    color: #ffd700;
-    font-weight: bold;
-}
-
-.common {
-    background: rgba(255, 255, 255, 0.1);
-}
 
 
 
