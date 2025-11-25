@@ -68,6 +68,8 @@ function moRuong(so) {
     danhSachAnhHung.push(ra);
     if (ra.cap === "Legendary") {
       html += `<div style="color:#ff00ff; font-size:2em; animation: pulse 1s infinite;">✦ ${ra.ten} ✦</div>`;
+    } else {
+      html += `<div>${ra.ten} (${ra.cap})</div>`;  // Sửa lỗi ngoặc kép ở đây
     }
   }
   document.getElementById("ketQuaMo").innerHTML = html || "<div>Chỉ ra anh hùng thường...</div>";
@@ -76,5 +78,6 @@ function moRuong(so) {
 
 // Khởi động
 capNhat();
+
 
 
