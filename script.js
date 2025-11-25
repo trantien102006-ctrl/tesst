@@ -42,10 +42,26 @@ let gameState = {
     loaiLinhDangRen: null,
     soLinhDangRen: 0,
     timerInterval: null,
+    startTime: null,
+    endTime: null,
     
     // Chiến trường
-    aiHienTai: 1
+    aiHienTai: 1,
+    autoDanhAi: false,
+    autoDanhAiInterval: null
 };
+
+// Danh sách quái vật theo level
+const danhSachQuaiVat = [
+    { ten: "Slime", level: 1, sucManh: 50, mau: 100, thuong: { bac: 1 } },
+    { ten: "Goblin", level: 2, sucManh: 80, mau: 150, thuong: { bac: 2 } },
+    { ten: "Wolf", level: 3, sucManh: 120, mau: 200, thuong: { bac: 2, vang: 1 } },
+    { ten: "Orc", level: 4, sucManh: 180, mau: 300, thuong: { bac: 3, vang: 1 } },
+    { ten: "Skeleton", level: 5, sucManh: 250, mau: 400, thuong: { bac: 3, vang: 2 } },
+    { ten: "Troll", level: 6, sucManh: 350, mau: 600, thuong: { vang: 2, kimCuong: 1 } },
+    { ten: "Minotaur", level: 7, sucManh: 500, mau: 800, thuong: { vang: 3, kimCuong: 1 } },
+    { ten: "Dragon", level: 8, sucManh: 800, mau: 1200, thuong: { vang: 5, kimCuong: 2 } }
+];
 
 // Danh sách vật phẩm cho từng loại rương
 const bangVatPhamBac = [
@@ -55,7 +71,7 @@ const bangVatPhamBac = [
     { ten: "Giảm 30 phút rèn luyện", tyLe: 10, loai: "giamtg", giam: 1800 },
     { ten: "Mảnh Takemasa", tyLe: 10, loai: "manh" },
     { ten: "Mảnh Ren", tyLe: 10, loai: "manh" },
-    { ten: "Mảnh Shinya", tyLe: 10, loai: "manh" }
+    { ten: "Mảnh Shinya", tyLe: 5, loai: "manh" }
 ];
 
 const bangVatPhamVang = [
@@ -65,7 +81,7 @@ const bangVatPhamVang = [
     { ten: "Giảm 30 phút rèn luyện", tyLe: 8, loai: "giamtg", giam: 1800 },
     { ten: "Mảnh Takemasa", tyLe: 15, loai: "manh" },
     { ten: "Mảnh Ren", tyLe: 15, loai: "manh" },
-    { ten: "Mảnh Shinya", tyLe: 11, loai: "manh" }
+    { ten: "Mảnh Shinya", tyLe: 7, loai: "manh" }
 ];
 
 const bangVatPhamKimCuong = [
@@ -75,33 +91,54 @@ const bangVatPhamKimCuong = [
     { ten: "Giảm 30 phút rèn luyện", tyLe: 6, loai: "giamtg", giam: 1800 },
     { ten: "Mảnh Takemasa", tyLe: 25, loai: "manh" },
     { ten: "Mảnh Ren", tyLe: 25, loai: "manh" },
-    { ten: "Mảnh Shinya", tyLe: 14, loai: "manh" },
-    { ten: "Tướng Takemasa", tyLe: 0.1, loai: "tuong" },
-    { ten: "Tướng Ren", tyLe: 0.1, loai: "tuong" },
-    { ten: "Tướng Shinya", tyLe: 0.1, loai: "tuong" }
+    { ten: "Mảnh Shinya", tyLe: 10, loai: "manh" },
+    { ten: "Tướng Shinya", tyLe: 2, loai: "tuong" }
 ];
 
 // Lưu game state
 function saveGame() {
     const saveData = {
         ...gameState,
-        timerInterval: null
+        timerInterval: null,
+        autoDanhAiInterval: null
     };
     localStorage.setItem('gameTraiLinh', JSON.stringify(saveData));
 }
 
-// Tải game state
+// Tải game state và xử lý rèn lính offline
 function loadGame() {
     const saved = localStorage.getItem('gameTraiLinh');
     if (saved) {
         const loadedState = JSON.parse(saved);
         
         // Kiểm tra nếu có quá trình rèn đang diễn ra
-        if (loadedState.dangRen && loadedState.thoiGianCon > 0) {
-            gameState = { ...loadedState };
-            startTimer();
+        if (loadedState.dangRen && loadedState.endTime) {
+            const now = Date.now();
+            const endTime = loadedState.endTime;
+            
+            if (now < endTime) {
+                // Quá trình rèn lính chưa kết thúc - tiếp tục
+                gameState = { ...loadedState };
+                gameState.thoiGianCon = Math.floor((endTime - now) / 1000);
+                gameState.dangRen = true;
+                startTimer();
+                console.log("Tiếp tục rèn lính từ offline...");
+            } else {
+                // Quá trình rèn lính đã kết thúc - hoàn thành
+                gameState = { ...loadedState };
+                gameState.linh[gameState.loaiLinhDangRen] += gameState.soLinhDangRen;
+                gameState.dangRen = false;
+                gameState.thoiGianCon = 0;
+                gameState.startTime = null;
+                gameState.endTime = null;
+                gameState.loaiLinhDangRen = null;
+                gameState.soLinhDangRen = 0;
+                console.log("Rèn lính hoàn thành khi offline!");
+            }
         } else {
             gameState = { ...loadedState };
+            gameState.dangRen = false;
+            gameState.thoiGianCon = 0;
         }
         
         console.log("Game đã được tải!");
@@ -113,6 +150,11 @@ function loadGame() {
 // Khởi tạo game
 function initGame() {
     console.log("🚀 Đang khởi động Trại Lính...");
+    
+    // Kiểm tra kết nối internet
+    updateOnlineStatus();
+    window.addEventListener('online', updateOnlineStatus);
+    window.addEventListener('offline', updateOnlineStatus);
     
     // Thử tải game đã lưu
     if (!loadGame()) {
@@ -133,6 +175,7 @@ function initGame() {
     document.getElementById('btnMoKimCuong').addEventListener('click', () => moRuong('kimCuong'));
     
     document.getElementById('btnDanhAi').addEventListener('click', danhAi);
+    document.getElementById('btnAutoDanhAi').addEventListener('click', toggleAutoDanhAi);
     
     // Sự kiện cho túi đồ
     document.getElementById('btnInventory').addEventListener('click', openInventory);
@@ -146,11 +189,26 @@ function initGame() {
         });
     });
     
+    // Sự kiện popup kết quả chiến đấu
+    document.getElementById('btnCloseCombatResult').addEventListener('click', closeCombatResult);
+    
     // Sự kiện chọn tướng
     setupChonTuong();
     
     updateUI();
     console.log("✅ Trại Lính đã sẵn sàng!");
+}
+
+// Cập nhật trạng thái online/offline
+function updateOnlineStatus() {
+    const statusElement = document.getElementById('onlineStatus');
+    if (navigator.onLine) {
+        statusElement.textContent = '🟢 Online';
+        statusElement.style.color = '#4CAF50';
+    } else {
+        statusElement.textContent = '🔴 Offline';
+        statusElement.style.color = '#ff4444';
+    }
 }
 
 // Popup chọn tướng
@@ -196,6 +254,11 @@ function closeInventory() {
     document.getElementById('inventoryPopup').classList.remove('active');
 }
 
+// Đóng popup kết quả chiến đấu
+function closeCombatResult() {
+    document.getElementById('combatResultPopup').classList.remove('active');
+}
+
 // Chuyển tab
 function switchTab(tabName) {
     // Ẩn tất cả tab
@@ -219,31 +282,89 @@ function updateUI() {
     document.getElementById('linhKy').textContent = gameState.linh.ky.toLocaleString();
     document.getElementById('linhCung').textContent = gameState.linh.cung.toLocaleString();
     
+    // Cập nhật bonus từ tướng
+    updateBonusDisplay();
+    
     // Cập nhật rương
     document.getElementById('ruongBac').textContent = gameState.ruong.bac;
     document.getElementById('ruongVang').textContent = gameState.ruong.vang;
     document.getElementById('ruongKimCuong').textContent = gameState.ruong.kimCuong;
     
-    // Cập nhật ải
-    document.getElementById('aiHienTai').textContent = gameState.aiHienTai;
-    document.getElementById('aiThuong').textContent = `${gameState.aiHienTai} Rương ${getRandomRuongType()}`;
+    // Cập nhật thông tin ải và quái vật
+    updateAiInfo();
     
-    // Cập nhật timer
-    const minutes = String(Math.floor(gameState.thoiGianCon / 60)).padStart(2, '0');
-    const seconds = String(gameState.thoiGianCon % 60).padStart(2, '0');
-    document.getElementById('timer').textContent = `${minutes}:${seconds}`;
+    // Cập nhật thông tin quân đội
+    updateArmyInfo();
     
-    // Vô hiệu hóa nút nếu đang rèn
-    const renButtons = document.querySelectorAll('.ren-btn');
-    renButtons.forEach(btn => {
-        btn.disabled = gameState.dangRen;
-    });
+    // Cập nhật timer và thông tin rèn
+    updateRenInfo();
     
     // Kiểm tra điều kiện ghép tướng
     checkGeneralCombination();
     
     // Lưu game
     saveGame();
+}
+
+// Cập nhật bonus từ tướng
+function updateBonusDisplay() {
+    let bonusBo = 0;
+    let bonusKy = 0;
+    let bonusCung = 0;
+    
+    if (gameState.tuong.Takemasa) bonusBo = 10;
+    if (gameState.tuong.Ren) bonusCung = 10;
+    if (gameState.tuong.Shinya) bonusKy = 10;
+    
+    document.getElementById('bonusBo').textContent = `+${bonusBo}%`;
+    document.getElementById('bonusKy').textContent = `+${bonusKy}%`;
+    document.getElementById('bonusCung').textContent = `+${bonusCung}%`;
+}
+
+// Cập nhật thông tin ải
+function updateAiInfo() {
+    const quaiVat = getQuaiVatForAi(gameState.aiHienTai);
+    document.getElementById('aiHienTai').textContent = gameState.aiHienTai;
+    document.getElementById('aiEnemy').textContent = quaiVat.ten;
+    document.getElementById('aiThuong').textContent = getThuongText(quaiVat.thuong);
+    
+    // Cập nhật thông tin quái vật
+    document.getElementById('enemyName').textContent = quaiVat.ten;
+    document.getElementById('enemyPower').textContent = quaiVat.sucManh;
+    document.getElementById('enemyHealth').textContent = quaiVat.mau;
+}
+
+// Cập nhật thông tin quân đội
+function updateArmyInfo() {
+    document.getElementById('armyBo').textContent = gameState.linh.bo;
+    document.getElementById('armyKy').textContent = gameState.linh.ky;
+    document.getElementById('armyCung').textContent = gameState.linh.cung;
+    
+    const totalLinh = gameState.linh.bo + gameState.linh.ky + gameState.linh.cung;
+    document.getElementById('armyTotal').textContent = totalLinh;
+}
+
+// Cập nhật thông tin rèn lính
+function updateRenInfo() {
+    const minutes = String(Math.floor(gameState.thoiGianCon / 60)).padStart(2, '0');
+    const seconds = String(gameState.thoiGianCon % 60).padStart(2, '0');
+    document.getElementById('timer').textContent = `${minutes}:${seconds}`;
+    
+    const renInfoElement = document.getElementById('renInfo');
+    if (gameState.dangRen) {
+        const linhName = getLinhName(gameState.loaiLinhDangRen);
+        renInfoElement.textContent = `Đang rèn ${gameState.soLinhDangRen} ${linhName}`;
+        renInfoElement.style.color = '#ffd700';
+    } else {
+        renInfoElement.textContent = 'Không có lính đang rèn';
+        renInfoElement.style.color = '#ccc';
+    }
+    
+    // Vô hiệu hóa nút nếu đang rèn
+    const renButtons = document.querySelectorAll('.ren-btn');
+    renButtons.forEach(btn => {
+        btn.disabled = gameState.dangRen;
+    });
 }
 
 // Cập nhật giao diện túi đồ
@@ -284,9 +405,15 @@ function updateInventoryUI() {
         if (soHuu) {
             const itemDiv = document.createElement('div');
             itemDiv.className = 'inventory-item tuong-item';
+            let bonusText = '';
+            if (ten === 'Takemasa') bonusText = '<div class="tuong-bonus-small">+10% Lính Bộ</div>';
+            if (ten === 'Ren') bonusText = '<div class="tuong-bonus-small">+10% Lính Cung</div>';
+            if (ten === 'Shinya') bonusText = '<div class="tuong-bonus-small">+10% Lính Kỵ</div>';
+            
             itemDiv.innerHTML = `
                 <div class="item-name">${ten}</div>
                 <div class="item-count">✅ Đã sở hữu</div>
+                ${bonusText}
             `;
             tuongContainer.appendChild(itemDiv);
         }
@@ -334,6 +461,8 @@ function startTimer() {
             gameState.linh[gameState.loaiLinhDangRen] += gameState.soLinhDangRen;
             gameState.dangRen = false;
             gameState.thoiGianCon = 0;
+            gameState.startTime = null;
+            gameState.endTime = null;
             gameState.loaiLinhDangRen = null;
             gameState.soLinhDangRen = 0;
             updateUI();
@@ -345,7 +474,7 @@ function startTimer() {
     }, 1000);
 }
 
-// Rèn lính
+// Rèn lính với cơ chế offline
 function renLinh(loai, soLinh, thoiGianGiay) {
     if (gameState.dangRen) {
         alert("Đang rèn lính rồi!");
@@ -356,6 +485,8 @@ function renLinh(loai, soLinh, thoiGianGiay) {
     gameState.thoiGianCon = thoiGianGiay;
     gameState.loaiLinhDangRen = loai;
     gameState.soLinhDangRen = soLinh;
+    gameState.startTime = Date.now();
+    gameState.endTime = gameState.startTime + (thoiGianGiay * 1000);
     
     startTimer();
     updateUI();
@@ -369,6 +500,21 @@ function getLinhName(loai) {
         'cung': 'Cung'
     };
     return names[loai] || '';
+}
+
+// Lấy quái vật cho ải
+function getQuaiVatForAi(aiLevel) {
+    const index = Math.min(aiLevel - 1, danhSachQuaiVat.length - 1);
+    return danhSachQuaiVat[index];
+}
+
+// Lấy text thưởng
+function getThuongText(thuong) {
+    let text = '';
+    if (thuong.bac) text += `${thuong.bac} Bạc `;
+    if (thuong.vang) text += `${thuong.vang} Vàng `;
+    if (thuong.kimCuong) text += `${thuong.kimCuong} Kim Cương`;
+    return text.trim();
 }
 
 // Mở rương
@@ -460,44 +606,124 @@ function displayResults(results) {
 
 // Đánh ải
 function danhAi() {
-    const linhRequired = gameState.aiHienTai * 100;
+    const quaiVat = getQuaiVatForAi(gameState.aiHienTai);
     const totalLinh = gameState.linh.bo + gameState.linh.ky + gameState.linh.cung;
     
-    if (totalLinh < linhRequired) {
-        alert(`Không đủ lính! Cần ${linhRequired} lính để đánh ải ${gameState.aiHienTai}`);
+    // Tính sức mạnh quân đội có bonus từ tướng
+    let sucManhQuanDoi = 0;
+    sucManhQuanDoi += gameState.linh.bo * (1 + (gameState.tuong.Takemasa ? 0.1 : 0));
+    sucManhQuanDoi += gameState.linh.ky * (1 + (gameState.tuong.Shinya ? 0.1 : 0));
+    sucManhQuanDoi += gameState.linh.cung * (1 + (gameState.tuong.Ren ? 0.1 : 0));
+    
+    if (sucManhQuanDoi < quaiVat.sucManh) {
+        showCombatResult(false, quaiVat, sucManhQuanDoi);
         return;
     }
     
-    // Trừ lính (ưu tiên trừ đều các loại)
-    const linhMoiLoai = Math.ceil(linhRequired / 3);
-    gameState.linh.bo = Math.max(0, gameState.linh.bo - linhMoiLoai);
-    gameState.linh.ky = Math.max(0, gameState.linh.ky - linhMoiLoai);
-    gameState.linh.cung = Math.max(0, gameState.linh.cung - linhMoiLoai);
+    // Tính tổn thất (tối thiểu 10% quân)
+    const tiLeThietHai = 0.1 + (Math.random() * 0.2); // 10-30% tổn thất
+    const linhMat = Math.floor(totalLinh * tiLeThietHai);
+    
+    // Trừ lính (tỷ lệ theo số lượng mỗi loại)
+    const tiLeBo = gameState.linh.bo / totalLinh;
+    const tiLeKy = gameState.linh.ky / totalLinh;
+    const tiLeCung = gameState.linh.cung / totalLinh;
+    
+    gameState.linh.bo = Math.max(0, gameState.linh.bo - Math.floor(linhMat * tiLeBo));
+    gameState.linh.ky = Math.max(0, gameState.linh.ky - Math.floor(linhMat * tiLeKy));
+    gameState.linh.cung = Math.max(0, gameState.linh.cung - Math.floor(linhMat * tiLeCung));
     
     // Thưởng rương
-    const ruongType = getRandomRuongType();
-    gameState.ruong[ruongType] += gameState.aiHienTai;
+    if (quaiVat.thuong.bac) gameState.ruong.bac += quaiVat.thuong.bac;
+    if (quaiVat.thuong.vang) gameState.ruong.vang += quaiVat.thuong.vang;
+    if (quaiVat.thuong.kimCuong) gameState.ruong.kimCuong += quaiVat.thuong.kimCuong;
     
     // Tăng ải
     gameState.aiHienTai++;
     
     // Hiển thị kết quả
-    const resultsContainer = document.getElementById('ketQuaMo');
-    resultsContainer.innerHTML = `
-        <h3 style="color: #ff4444; text-align: center; margin-bottom: 15px;">⚔️ Chiến Thắng Ải ${gameState.aiHienTai - 1}</h3>
-        <div class="result-item epic">Tiêu hao: ${linhRequired} lính</div>
-        <div class="result-item rare">Nhận được: ${gameState.aiHienTai - 1} Rương ${getRuongName(ruongType)}</div>
-    `;
-    
+    showCombatResult(true, quaiVat, sucManhQuanDoi, linhMat);
     updateUI();
 }
 
-// Lấy loại rương ngẫu nhiên cho thưởng ải
-function getRandomRuongType() {
-    const rand = Math.random() * 100;
-    if (rand < 70) return 'bac';      // 70% rương bạc
-    if (rand < 90) return 'vang';     // 20% rương vàng
-    return 'kimCuong';               // 10% rương kim cương
+// Hiển thị kết quả chiến đấu
+function showCombatResult(chienThang, quaiVat, sucManhQuanDoi, linhMat = 0) {
+    const popup = document.getElementById('combatResultPopup');
+    const content = document.getElementById('combatResultContent');
+    
+    if (chienThang) {
+        content.innerHTML = `
+            <div class="combat-result-victory">
+                <h3 style="color: #4CAF50;">🎉 Chiến Thắng!</h3>
+                <div class="combat-details">
+                    <p>Đã đánh bại <strong>${quaiVat.ten}</strong></p>
+                    <p>Tổn thất: <span style="color: #ff4444;">${linhMat.toLocaleString()} lính</span></p>
+                    <p>Thưởng: <span style="color: #ffd700;">${getThuongText(quaiVat.thuong)}</span></p>
+                </div>
+                <div class="combat-stats">
+                    <p>Ải mới: <strong>${gameState.aiHienTai}</strong></p>
+                </div>
+            </div>
+        `;
+    } else {
+        content.innerHTML = `
+            <div class="combat-result-defeat">
+                <h3 style="color: #ff4444;">💥 Thất Bại!</h3>
+                <div class="combat-details">
+                    <p>Không thể đánh bại <strong>${quaiVat.ten}</strong></p>
+                    <p>Sức mạnh của bạn: <span style="color: #ffd700;">${sucManhQuanDoi.toFixed(0)}</span></p>
+                    <p>Sức mạnh đối thủ: <span style="color: #ff4444;">${quaiVat.sucManh}</span></p>
+                </div>
+                <div class="combat-tips">
+                    <p>💡 Mẹo: Rèn thêm lính hoặc sử dụng vật phẩm tăng sức mạnh</p>
+                </div>
+            </div>
+        `;
+    }
+    
+    popup.classList.add('active');
+}
+
+// Tự động đánh ải
+function toggleAutoDanhAi() {
+    const btn = document.getElementById('btnAutoDanhAi');
+    
+    if (gameState.autoDanhAi) {
+        // Tắt auto
+        gameState.autoDanhAi = false;
+        clearInterval(gameState.autoDanhAiInterval);
+        btn.textContent = '🔄 Tự Động Đánh Ải';
+        btn.style.background = 'linear-gradient(135deg, #4CAF50, #45a049)';
+    } else {
+        // Bật auto
+        gameState.autoDanhAi = true;
+        btn.textContent = '⏹️ Dừng Tự Động';
+        btn.style.background = 'linear-gradient(135deg, #ff4444, #cc0000)';
+        
+        gameState.autoDanhAiInterval = setInterval(() => {
+            if (!gameState.autoDanhAi) {
+                clearInterval(gameState.autoDanhAiInterval);
+                return;
+            }
+            
+            const quaiVat = getQuaiVatForAi(gameState.aiHienTai);
+            const totalLinh = gameState.linh.bo + gameState.linh.ky + gameState.linh.cung;
+            
+            // Tính sức mạnh quân đội
+            let sucManhQuanDoi = 0;
+            sucManhQuanDoi += gameState.linh.bo * (1 + (gameState.tuong.Takemasa ? 0.1 : 0));
+            sucManhQuanDoi += gameState.linh.ky * (1 + (gameState.tuong.Shinya ? 0.1 : 0));
+            sucManhQuanDoi += gameState.linh.cung * (1 + (gameState.tuong.Ren ? 0.1 : 0));
+            
+            if (sucManhQuanDoi >= quaiVat.sucManh && totalLinh > 0) {
+                danhAi();
+            } else {
+                // Không đủ sức đánh, tắt auto
+                toggleAutoDanhAi();
+                alert('Không đủ lính để tiếp tục tự động đánh ải!');
+            }
+        }, 3000); // 3 giây mỗi lần đánh
+    }
 }
 
 // Kiểm tra điều kiện ghép tướng
@@ -571,6 +797,12 @@ function suDungVatPham(tenVatPham) {
     }
     
     gameState.thoiGianCon = Math.max(0, gameState.thoiGianCon - giamGiay);
+    
+    // Cập nhật thời gian kết thúc
+    if (gameState.endTime) {
+        gameState.endTime -= (giamGiay * 1000);
+    }
+    
     gameState.vatPham[tenVatPham]--;
     
     alert(`Đã sử dụng ${tenVatPham}, giảm ${giamGiay/60} phút!`);
