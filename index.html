@@ -8,55 +8,70 @@
 </head>
 <body>
     <div class="game-container">
-        <!-- Khu vực game chính -->
-        <div class="main-game">
+        <!-- Header -->
+        <header class="game-header">
             <h1>Game Rèn Quân</h1>
-            
-            <div class="stats">
-                <div class="stat-item">
-                    <h2>Số quân: <span id="soQuan">0</span></h2>
-                </div>
-                <div class="stat-item">
-                    <h2>Rương: <span id="ruong">50</span></h2>
-                </div>
+            <button id="btnInventory" class="inventory-btn">🎒 Túi Đồ</button>
+        </header>
+
+        <!-- Thông tin chính -->
+        <div class="main-stats">
+            <div class="stat-card">
+                <h3>Số Quân</h3>
+                <div id="soQuan" class="stat-value">0</div>
             </div>
-            
-            <div id="timer">00:00</div>
-            
-            <div class="actions">
-                <div class="action-group">
-                    <h3>Rèn Quân</h3>
-                    <button id="btnRen100">Rèn 100 lính (10 phút)</button>
-                    <button id="btnRen1000">Rèn 1000 lính (100 phút)</button>
-                </div>
-                
-                <div class="action-group">
-                    <h3>Mở Rương</h3>
-                    <button id="btnMo1">Mở 1 rương</button>
-                    <button id="btnMo10">Mở 10 rương</button>
-                </div>
+            <div class="stat-card">
+                <h3>Rương</h3>
+                <div id="ruong" class="stat-value">50</div>
             </div>
-            
-            <div id="ketQuaMo" class="results"></div>
         </div>
-        
-        <!-- Túi đồ bên phải -->
-        <div class="inventory">
-            <h2>Túi Đồ</h2>
-            
-            <div class="inventory-section">
-                <h3>Mảnh Tướng</h3>
-                <div id="manhTuong" class="inventory-items"></div>
+
+        <!-- Timer -->
+        <div id="timer" class="timer">00:00</div>
+
+        <!-- Nút hành động -->
+        <div class="action-grid">
+            <div class="action-column">
+                <h3>Rèn Quân</h3>
+                <button id="btnRen100" class="action-btn">Rèn 100 lính<br><small>(10 phút)</small></button>
+                <button id="btnRen1000" class="action-btn">Rèn 1000 lính<br><small>(100 phút)</small></button>
             </div>
             
-            <div class="inventory-section">
-                <h3>Giảm Thời Gian Rèn Luyện</h3>
-                <div id="vatPham" class="inventory-items"></div>
+            <div class="action-column">
+                <h3>Mở Rương</h3>
+                <button id="btnMo1" class="action-btn">Mở 1 Rương</button>
+                <button id="btnMo10" class="action-btn">Mở 10 Rương</button>
+            </div>
+        </div>
+
+        <!-- Kết quả -->
+        <div id="ketQuaMo" class="results-container"></div>
+    </div>
+
+    <!-- Popup Túi Đồ -->
+    <div id="inventoryPopup" class="popup-overlay">
+        <div class="popup-content">
+            <div class="popup-header">
+                <h2>🎒 Túi Đồ</h2>
+                <button id="btnCloseInventory" class="close-btn">✕</button>
             </div>
             
-            <div class="inventory-section">
-                <h3>Sử Dụng Vật Phẩm</h3>
-                <div id="suDungVatPham" class="use-items"></div>
+            <div class="inventory-tabs">
+                <button class="tab-btn active" data-tab="manhTuong">Mảnh Tướng</button>
+                <button class="tab-btn" data-tab="vatPham">Giảm Thời Gian</button>
+            </div>
+            
+            <div class="tab-content">
+                <div id="tabManhTuong" class="tab-pane active">
+                    <div id="manhTuong" class="items-grid"></div>
+                </div>
+                <div id="tabVatPham" class="tab-pane">
+                    <div id="vatPham" class="items-grid"></div>
+                    <div class="use-section">
+                        <h3>Sử Dụng Vật Phẩm</h3>
+                        <div id="suDungVatPham" class="use-buttons"></div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -64,6 +79,7 @@
     <script src="script.js"></script>
 </body>
 </html>
+
 
 
 
