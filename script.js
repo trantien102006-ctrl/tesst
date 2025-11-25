@@ -95,6 +95,8 @@ const bangVatPhamKimCuong = [
     { ten: "Tướng Shinya", tyLe: 2, loai: "tuong" }
 ];
 
+// ==================== HỆ THỐNG LƯU TRỮ ====================
+
 // Lưu game state
 function saveGame() {
     const saveData = {
@@ -152,6 +154,8 @@ function loadGame() {
     return false;
 }
 
+// ==================== KHỞI TẠO GAME ====================
+
 // Khởi tạo game
 function initGame() {
     console.log("🚀 Đang khởi động Trại Lính...");
@@ -207,9 +211,6 @@ function bindEvents() {
     
     // Sự kiện popup kết quả chiến đấu
     document.getElementById('btnCloseCombatResult').addEventListener('click', closeCombatResult);
-    
-    // Sự kiện chọn tướng
-    setupChonTuong();
 }
 
 // Cập nhật trạng thái online/offline
@@ -224,44 +225,75 @@ function updateOnlineStatus() {
     }
 }
 
-// Popup chọn tướng - SỬA LỖI QUAN TRỌNG
-function setupChonTuong() {
+// ==================== CHỌN TƯỚNG BAN ĐẦU ====================
+
+// Popup chọn tướng
+function showChonTuongPopup() {
+    const popup = document.getElementById('chonTuongPopup');
+    popup.classList.add('active');
+    
+    // Đảm bảo các sự kiện được gán lại mỗi lần hiện popup
+    setupChonTuongEvents();
+}
+
+function setupChonTuongEvents() {
     const tuongOptions = document.querySelectorAll('.tuong-option');
     const btnXacNhan = document.getElementById('btnXacNhanTuong');
     let selectedTuong = null;
     
-    console.log("Thiết lập chọn tướng...");
+    console.log("Thiết lập sự kiện chọn tướng...");
     
+    // Xóa sự kiện cũ (nếu có) để tránh trùng lặp
     tuongOptions.forEach(option => {
+        option.replaceWith(option.cloneNode(true));
+    });
+    
+    // Lấy lại các element sau khi clone
+    const newTuongOptions = document.querySelectorAll('.tuong-option');
+    const newBtnXacNhan = document.getElementById('btnXacNhanTuong');
+    
+    newTuongOptions.forEach(option => {
         option.addEventListener('click', function() {
             console.log("Tướng được click:", this.getAttribute('data-tuong'));
+            
             // Bỏ chọn tất cả
-            tuongOptions.forEach(opt => opt.classList.remove('selected'));
+            newTuongOptions.forEach(opt => {
+                opt.classList.remove('selected');
+                opt.style.border = '2px solid transparent';
+            });
+            
             // Chọn cái này
             this.classList.add('selected');
+            this.style.border = '3px solid #ffd700';
             selectedTuong = this.getAttribute('data-tuong');
-            btnXacNhan.disabled = false;
+            newBtnXacNhan.disabled = false;
+            newBtnXacNhan.style.background = 'linear-gradient(135deg, #4CAF50, #45a049)';
             console.log("Tướng đã chọn:", selectedTuong);
         });
     });
     
-    btnXacNhan.addEventListener('click', function() {
+    // Xóa sự kiện cũ và gán sự kiện mới
+    newBtnXacNhan.replaceWith(newBtnXacNhan.cloneNode(true));
+    const finalBtnXacNhan = document.getElementById('btnXacNhanTuong');
+    
+    finalBtnXacNhan.addEventListener('click', function() {
+        console.log("Nút xác nhận được click, tướng đã chọn:", selectedTuong);
+        
         if (selectedTuong) {
             console.log("Xác nhận chọn tướng:", selectedTuong);
             gameState.tuong[selectedTuong] = true;
             document.getElementById('chonTuongPopup').classList.remove('active');
             updateUI();
             saveGame();
-            alert(`🎉 Chào mừng Tướng ${selectedTuong} đến với Trại Lính!`);
+            alert(`🎉 Chào mừng Tướng ${selectedTuong} đến với Trại Lính!\n\nBạn nhận được:\n✓ ${selectedTuong === 'Takemasa' ? '+10% sức mạnh Lính Bộ' : '+10% sức mạnh Lính Cung'}\n✓ 100 Rương Bạc để bắt đầu`);
         } else {
             console.log("Không có tướng nào được chọn");
+            alert("Vui lòng chọn một tướng để bắt đầu!");
         }
     });
 }
 
-function showChonTuongPopup() {
-    document.getElementById('chonTuongPopup').classList.add('active');
-}
+// ==================== HỆ THỐNG UI ====================
 
 // Mở túi đồ
 function openInventory() {
@@ -333,7 +365,7 @@ function updateUI() {
     saveGame();
 }
 
-// Cập nhật bonus từ tướng - SỬA LỖI QUAN TRỌNG
+// Cập nhật bonus từ tướng
 function updateBonusDisplay() {
     let bonusBo = 0;
     let bonusKy = 0;
@@ -348,6 +380,11 @@ function updateBonusDisplay() {
     document.getElementById('bonusBo').textContent = `+${bonusBo}%`;
     document.getElementById('bonusKy').textContent = `+${bonusKy}%`;
     document.getElementById('bonusCung').textContent = `+${bonusCung}%`;
+    
+    // Thay đổi màu sắc để dễ nhận biết
+    if (bonusBo > 0) document.getElementById('bonusBo').style.color = '#4CAF50';
+    if (bonusKy > 0) document.getElementById('bonusKy').style.color = '#4CAF50';
+    if (bonusCung > 0) document.getElementById('bonusCung').style.color = '#4CAF50';
 }
 
 // Cập nhật thông tin ải
@@ -428,7 +465,7 @@ function updateInventoryUI() {
         vatPhamContainer.appendChild(itemDiv);
     });
     
-    // Cập nhật tướng - SỬA LỖI QUAN TRỌNG
+    // Cập nhật tướng
     const tuongContainer = document.getElementById('tuong');
     tuongContainer.innerHTML = '';
     
@@ -485,6 +522,8 @@ function updateUseItems() {
     }
 }
 
+// ==================== HỆ THỐNG RÈN LÍNH ====================
+
 // Bắt đầu đếm ngược
 function startTimer() {
     if (gameState.timerInterval) {
@@ -538,6 +577,8 @@ function getLinhName(loai) {
     };
     return names[loai] || '';
 }
+
+// ==================== HỆ THỐNG MỞ RƯƠNG ====================
 
 // Lấy quái vật cho ải
 function getQuaiVatForAi(aiLevel) {
@@ -642,7 +683,9 @@ function displayResults(results) {
     });
 }
 
-// Đánh ải - SỬA LỖI TÍNH TOÁN BONUS
+// ==================== HỆ THỐNG CHIẾN TRƯỜNG ====================
+
+// Đánh ải
 function danhAi() {
     const quaiVat = getQuaiVatForAi(gameState.aiHienTai);
     const totalLinh = gameState.linh.bo + gameState.linh.ky + gameState.linh.cung;
@@ -652,7 +695,7 @@ function danhAi() {
         return;
     }
     
-    // Tính sức mạnh quân đội có bonus từ tướng - SỬA LỖI
+    // Tính sức mạnh quân đội có bonus từ tướng
     let sucManhQuanDoi = 0;
     sucManhQuanDoi += gameState.linh.bo * (1 + (gameState.tuong.Takemasa ? 0.1 : 0));
     sucManhQuanDoi += gameState.linh.ky * (1 + (gameState.tuong.Shinya ? 0.1 : 0));
@@ -777,6 +820,8 @@ function toggleAutoDanhAi() {
     }
 }
 
+// ==================== HỆ THỐNG TƯỚNG ====================
+
 // Kiểm tra điều kiện ghép tướng
 function checkGeneralCombination() {
     const resultsContainer = document.getElementById('ketQuaMo');
@@ -860,6 +905,8 @@ function suDungVatPham(tenVatPham) {
     updateUI();
     updateInventoryUI();
 }
+
+// ==================== KHỞI CHẠY GAME ====================
 
 // Khởi động game khi trang load
 document.addEventListener('DOMContentLoaded', initGame);
