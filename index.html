@@ -3,76 +3,123 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Trại Lính - Rèn Quân & Chinh Phạt</title>
+    <title>Trại Rèn Lính</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="game-container">
-
-        <!-- Popup chọn tướng (lần đầu chơi) -->
-        <div id="chonTuongPopup" class="popup-overlay active">
-            <div class="popup-content">
-                <h2>Chọn Tướng Khởi Nghiệp</h2>
-                <div class="tuong-grid">
-                    <div class="tuong-option" data-tuong="Takemasa">Takemasa<br><small>Mạnh về Bộ binh</small></div>
-                    <div class="tuong-option" data-tuong="Ren">Ren<br><small>Mạnh về Kỵ binh</small></div>
-                    <div class="tuong-option" data-tuong="Shinya">Shinya<br><small>Mạnh về Cung thủ</small></div>
+    <!-- Popup chọn tướng ban đầu -->
+    <div id="chonTuongPopup" class="popup-overlay active">
+        <div class="popup-content">
+            <div class="popup-header">
+                <h2>Chọn Tướng Ban Đầu</h2>
+            </div>
+            <div class="chon-tuong-content">
+                <p>Chào mừng đến với Trại Rèn Lính! Hãy chọn một vị tướng để bắt đầu:</p>
+                <div class="tuong-options">
+                    <div class="tuong-option" data-tuong="Takemasa">
+                        <div class="tuong-avatar">⚔️</div>
+                        <h3>Takemasa</h3>
+                        <p>Tướng tấn công mạnh mẽ</p>
+                    </div>
+                    <div class="tuong-option" data-tuong="Ren">
+                        <div class="tuong-avatar">🛡️</div>
+                        <h3>Ren</h3>
+                        <p>Tướng phòng thủ vững chắc</p>
+                    </div>
                 </div>
-                <button id="btnXacNhanTuong" class="action-btn" disabled>Xác Nhận</button>
+                <button id="btnXacNhanTuong" class="confirm-btn" disabled>Xác Nhận</button>
             </div>
         </div>
+    </div>
 
+    <div class="game-container">
         <!-- Header -->
         <header class="game-header">
-            <h1>Trại Lính - Chinh Phạt Vô Hạn</h1>
-            <button id="btnInventory" class="inventory-btn">Túi Đồ</button>
+            <div class="header-stats">
+                <div class="stat-item">
+                    <span class="stat-label">Rương Bạc:</span>
+                    <span id="ruongBac" class="stat-value">100</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Rương Vàng:</span>
+                    <span id="ruongVang" class="stat-value">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Rương Kim Cương:</span>
+                    <span id="ruongKimCuong" class="stat-value">0</span>
+                </div>
+            </div>
+            <button id="btnInventory" class="inventory-btn">🎒 Túi Đồ</button>
         </header>
 
         <!-- Thông tin lính -->
-        <div class="main-stats">
-            <div class="stat-card"><h3>Bộ Binh</h3><div id="linhBo" class="stat-value">0</div></div>
-            <div class="stat-card"><h3>Kỵ Binh</h3><div id="linhKy" class="stat-value">0</div></div>
-            <div class="stat-card"><h3>Cung Thủ</h3><div id="linhCung" class="stat-value">0</div></div>
+        <div class="linh-stats">
+            <div class="linh-type">
+                <h3>🪖 Lính Bộ</h3>
+                <div id="linhBo" class="linh-count">0</div>
+            </div>
+            <div class="linh-type">
+                <h3>🐎 Lính Kỵ</h3>
+                <div id="linhKy" class="linh-count">0</div>
+            </div>
+            <div class="linh-type">
+                <h3>🏹 Lính Cung</h3>
+                <div id="linhCung" class="linh-count">0</div>
+            </div>
         </div>
 
-        <!-- Rương -->
-        <div class="main-stats">
-            <div class="stat-card"><h3>Rương Bạc</h3><div id="ruongBac" class="stat-value">100</div></div>
-            <div class="stat-card"><h3>Rương Vàng</h3><div id="ruongVang" class="stat-value">0</div></div>
-            <div class="stat-card"><h3>Rương Kim Cương</h3><div id="ruongKimCuong" class="stat-value">0</div></div>
+        <!-- Timer -->
+        <div id="timer" class="timer">00:00</div>
+
+        <!-- Khu vực rèn lính -->
+        <div class="ren-section">
+            <h3>Rèn Lính</h3>
+            <div class="ren-options">
+                <button id="btnRenBo" class="ren-btn">
+                    Rèn 100 Lính Bộ<br>
+                    <small>(10 phút)</small>
+                </button>
+                <button id="btnRenKy" class="ren-btn">
+                    Rèn 100 Lính Kỵ<br>
+                    <small>(15 phút)</small>
+                </button>
+                <button id="btnRenCung" class="ren-btn">
+                    Rèn 100 Lính Cung<br>
+                    <small>(12 phút)</small>
+                </button>
+            </div>
         </div>
 
-        <!-- Timer + Ải hiện tại -->
-        <div class="timer-section">
-            <div id="timer" class="timer">00:00</div>
+        <!-- Khu vực mở rương -->
+        <div class="ruong-section">
+            <h3>Mở Rương</h3>
+            <div class="ruong-options">
+                <button id="btnMoBac" class="ruong-btn bac">
+                    Mở Rương Bạc<br>
+                    <small>(Tỷ lệ cơ bản)</small>
+                </button>
+                <button id="btnMoVang" class="ruong-btn vang">
+                    Mở Rương Vàng<br>
+                    <small>(Tăng tỷ lệ mảnh tướng)</small>
+                </button>
+                <button id="btnMoKimCuong" class="ruong-btn kimcuong">
+                    Mở Rương Kim Cương<br>
+                    <small>(Cơ hội nhận tướng)</small>
+                </button>
+            </div>
+        </div>
+
+        <!-- Khu vực đánh ải -->
+        <div class="ai-section">
+            <h3>Chiến Trường</h3>
             <div class="ai-info">
-                <h3>Ải hiện tại: <span id="aiHienTai">1</span></h3>
-                <p>Thưởng: <span id="aiThuong">1 Rương Bạc</span></p>
+                <div class="ai-level">Ải hiện tại: <span id="aiHienTai">1</span></div>
+                <div class="ai-reward">Thưởng: <span id="aiThuong">1 Rương Bạc</span></div>
             </div>
+            <button id="btnDanhAi" class="danh-ai-btn">⚔️ Đánh Ải</button>
         </div>
 
-        <!-- Nút hành động -->
-        <div class="action-grid">
-            <div class="action-column">
-                <h3>Rèn Lính</h3>
-                <button id="btnRenBo" class="action-btn ren-btn">Rèn 100 Bộ<br><small>10 phút</small></button>
-                <button id="btnRenKy" class="action-btn ren-btn">Rèn 100 Kỵ<br><small>15 phút</small></button>
-                <button id="btnRenCung" class="action-btn ren-btn">Rèn 100 Cung<br><small>12 phút</small></button>
-            </div>
-            <div class="action-column">
-                <h3>Mở Rương</h3>
-                <button id="btnMoBac" class="action-btn">Mở Rương Bạc</button>
-                <button id="btnMoVang" class="action-btn">Mở Rương Vàng</button>
-                <button id="btnMoKimCuong" class="action-btn">Mở Rương Kim Cương</button>
-            </div>
-        </div>
-
-        <!-- Nút đánh ải -->
-        <div class="danhai-section">
-            <button id="btnDanhAi" class="action-btn big-btn">ĐÁNH ẢI</button>
-        </div>
-
-        <!-- Khu vực kết quả -->
+        <!-- Kết quả -->
         <div id="ketQuaMo" class="results-container"></div>
     </div>
 
@@ -80,14 +127,16 @@
     <div id="inventoryPopup" class="popup-overlay">
         <div class="popup-content">
             <div class="popup-header">
-                <h2>Túi Đồ</h2>
-                <button id="btnCloseInventory" class="close-btn">×</button>
+                <h2>🎒 Túi Đồ</h2>
+                <button id="btnCloseInventory" class="close-btn">✕</button>
             </div>
+            
             <div class="inventory-tabs">
                 <button class="tab-btn active" data-tab="manhTuong">Mảnh Tướng</button>
-                <button class="tab-btn" data-tab="vatPham">Vật Phẩm</button>
+                <button class="tab-btn" data-tab="vatPham">Giảm Thời Gian</button>
                 <button class="tab-btn" data-tab="tuong">Tướng</button>
             </div>
+            
             <div class="tab-content">
                 <div id="tabManhTuong" class="tab-pane active">
                     <div id="manhTuong" class="items-grid"></div>
@@ -109,6 +158,7 @@
     <script src="script.js"></script>
 </body>
 </html>
+
 
 
 
